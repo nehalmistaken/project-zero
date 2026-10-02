@@ -1,0 +1,10 @@
+export const stages=['Pending','Assigned','In progress','Resolved','Closed'];
+const templates=[['Streetlight outage near the school','Electricity','High','Pune · Ward 12'],['Waste collection delayed on the market road','Sanitation','Medium','Indore · Ward 04'],['Low water pressure in residential lanes','Water supply','Medium','Jaipur · Ward 08'],['Pothole reported near the bus stop','Public works','High','Bengaluru · Ward 21'],['Park seating needs repair','Public amenities','Low','Chandigarh · Sector 22'],['Drain overflow after rain','Sanitation','High','Lucknow · Ward 09'],['Damaged footpath beside the health centre','Public works','Medium','Nagpur · Ward 16'],['Water leak beside the community hall','Water supply','Medium','Bhopal · Ward 03'],['Traffic signal requires inspection','Electricity','High','Surat · Ward 07'],['Public garden lighting needs repair','Public amenities','Low','Mysuru · Ward 11']];
+function makeCase(n,now,stage=0){const [title,department,priority,location]=templates[n%templates.length];return {id:'SIM-'+String(n+1).padStart(5,'0'),title,department,priority,location,stage,created:now,updated:now,history:Array.from({length:stage+1},(_,i)=>({stage:i,at:now-(stage-i)*6000}))};}
+export function initialFeed(now=Date.now()){return {tick:0,sequence:6,rows:Array.from({length:6},(_,i)=>makeCase(i,now-(6-i)*60000,i%5)),lastEvent:'Service feed connected'};}
+export function advanceFeed(state,now=Date.now()){
+ const tick=state.tick+1;let rows=state.rows.map(r=>({...r,history:[...r.history]}));let lastEvent='All visible cases are up to date';
+ const candidates=rows.filter(r=>r.stage<4);if(candidates.length){const current=candidates[tick%candidates.length];const row=rows.find(r=>r.id===current.id);row.stage++;row.updated=now;row.history.push({stage:row.stage,at:now});lastEvent=row.id+' moved to '+stages[row.stage].toLowerCase();}
+ let sequence=state.sequence;if(tick%2===0){const record=makeCase(sequence++,now);rows.unshift(record);lastEvent='New concern received · '+record.location;}
+ return {tick,sequence,rows:rows.slice(0,40),lastEvent};
+}

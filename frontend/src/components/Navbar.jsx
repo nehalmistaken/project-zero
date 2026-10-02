@@ -1,17 +1,16 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
+  ScanLine,
+  BarChart3,
+  Monitor,
+  Plus,
   Building2,
-  House,
   FileText,
   SearchCheck,
   LayoutDashboard,
-  PhoneCall,
-  LogIn,
   CircleUserRound,
-  UserPlus,
   LogOut,
-  Globe,
   Bell,
   CheckCheck,
   AlertCircle,
@@ -24,11 +23,13 @@ import {
   Copy,
   RefreshCw,
 } from 'lucide-react';
+import { citizenProfile } from '../services/citizenAccounts';
 import { apiService } from '../services/api';
 
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const profile = citizenProfile();
   const adminToken = localStorage.getItem('admin_token');
   const citizenToken = localStorage.getItem('citizen_token');
   const activeToken = adminToken || citizenToken;
@@ -41,6 +42,17 @@ export default function Navbar() {
 
   const [markingReadId, setMarkingReadId] = useState(null);
   const [markingAllRead, setMarkingAllRead] = useState(false);
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    setNotifications([]);
+    setUnreadCount(0);
+    sessionStorage.removeItem('project_profile');
+    sessionStorage.removeItem('project_guest');
+    sessionStorage.removeItem('project_mode');
+    navigate('/login');
+  };
 
   // Human-friendly relative timestamp helper
   const formatTimeAgo = (timestamp) => {
@@ -129,22 +141,35 @@ export default function Navbar() {
 
     if (notif.grievance_id) {
       if (adminToken) {
-        navigate(`/admin/dashboard?search=${encodeURIComponent(notif.grievance_id)}`);
+        navigate(`/admin/dashboard?tab=complaints&search=${encodeURIComponent(notif.grievance_id)}`);
       } else {
         navigate(`/history?id=${encodeURIComponent(notif.grievance_id)}`);
       }
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    setNotifications([]);
-    setUnreadCount(0);
-    navigate('/');
-  };
 
-  const isActive = (path) => location.pathname === path;
+  const currentTab = new URLSearchParams(location.search).get('tab') || 'dashboard';
+  const isActive = (path) => path.startsWith('/activity') ? location.pathname === '/activity' && (new URLSearchParams(location.search).get('filter') || 'all') === (new URLSearchParams(path.split('?')[1] || '').get('filter') || 'all') : path.includes('?tab=')
+    ? location.pathname === '/admin/dashboard' && currentTab === path.split('?tab=')[1]
+    : location.pathname === path;
+  const officerLinks = [
+    ['/admin/dashboard?tab=dashboard', 'Performance', LayoutDashboard],
+    ['/admin/dashboard?tab=complaints', 'Grievance queue', FileText],
+    ['/admin/dashboard?tab=departments', 'Departments', Building2],
+    ['/admin/dashboard?tab=ai_analysis', 'AI intelligence', ScanLine],
+    ['/admin/dashboard?tab=reports', 'Reports & analytics', BarChart3],
+    ['/admin/dashboard?tab=users', 'Officer accounts', CircleUserRound],
+    ['/admin/dashboard?tab=settings', 'Settings', ShieldAlert],
+  ];
+  const citizenLinks = [['/activity', 'Service activity', BarChart3], ['/activity?filter=high', 'High priority', Flame], ['/activity?filter=pending', 'Pending cases', Clock], ['/activity?filter=resolved', 'Resolved cases', CheckCircle2], ['/submit', 'New grievance', FileText], ['/history', 'Track & browse', SearchCheck]];
+  const links = adminToken ? officerLinks : citizenLinks;
+  useEffect(() => { setShowDropdown(false); }, [location.pathname, location.search]);
+  useEffect(() => {
+    const closeOnEscape = event => { if (event.key === 'Escape') setShowDropdown(false); };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, []);
 
   // Type-specific icons & visual priority styling
   const getNotifIconAndStyle = (type, title = '') => {
@@ -200,104 +225,28 @@ export default function Navbar() {
     }
 
     return {
-      icon: <Info size={16} className="text-[#1E40AF] shrink-0" />,
-      accentClass: 'border-l-[#1E40AF] bg-blue-50/50',
-      badgeClass: 'bg-blue-100 text-[#1E40AF] border-blue-200',
+      icon: <Info size={16} className="text-[#31624e] shrink-0" />,
+      accentClass: 'border-l-[#31624e] bg-blue-50/50',
+      badgeClass: 'bg-blue-100 text-[#31624e] border-blue-200',
       label: 'Update',
     };
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-300 bg-white shadow-2xs">
-      {/* Government Top Utility Bar */}
-      <div className="bg-[#1e293b] text-slate-200 text-[11px] py-1.5 px-4 md:px-8 border-b border-slate-700">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-4">
-            <span className="font-semibold uppercase tracking-wider flex items-center gap-1">
-              <Globe size={11} className="text-[#1E40AF]" /> GOVERNMENT OF INDIA
-            </span>
-            <span className="hidden text-slate-400 sm:inline">|</span>
-            <span className="hidden text-slate-300 sm:inline">Department of Public Grievances</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <a href="#content" className="hover:underline">Skip to main content</a>
-            <span className="text-slate-400">|</span>
-            <span className="cursor-pointer hover:underline">English</span>
-            <span className="text-slate-400">|</span>
-            <span className="cursor-pointer hover:underline">हिंदी</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Branding & Navigation Bar */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 md:px-8">
-        <Link to="/" className="flex items-center gap-2.5 sm:gap-3">
-          <div className="rounded-lg bg-[#1E40AF] p-2 sm:p-2.5 text-white shadow-xs shrink-0">
-            <Building2 size={20} className="sm:w-6 sm:h-6" />
-          </div>
-          <div className="leading-tight">
-            <h1 className="text-xs sm:text-base font-extrabold tracking-tight text-[#1E40AF]">
-              AI Smart Public Grievance Management System
-            </h1>
-            <p className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-[0.15em] sm:tracking-[0.18em] text-slate-500">
-              National Citizen Services Portal
-            </p>
-          </div>
-        </Link>
-
-        {/* Desktop Menu */}
-        <div className="hidden items-center gap-1 lg:flex">
-          <Link
-            to="/"
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 transition ${
-              isActive('/')
-                ? 'border-[#1E40AF] text-[#1E40AF]'
-                : 'border-transparent text-slate-600 hover:text-[#1E40AF]'
-            }`}
-          >
-            <House size={16} /> Home
-          </Link>
-          <Link
-            to="/submit"
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 transition ${
-              isActive('/submit')
-                ? 'border-[#1E40AF] text-[#1E40AF]'
-                : 'border-transparent text-slate-600 hover:text-[#1E40AF]'
-            }`}
-          >
-            <FileText size={16} /> Submit Complaint
-          </Link>
-          <Link
-            to="/history"
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 transition ${
-              isActive('/history')
-                ? 'border-[#1E40AF] text-[#1E40AF]'
-                : 'border-transparent text-slate-600 hover:text-[#1E40AF]'
-            }`}
-          >
-            <SearchCheck size={16} /> Track Complaint
-          </Link>
-          <Link
-            to="/admin/dashboard"
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 transition ${
-              isActive('/admin/dashboard')
-                ? 'border-[#1E40AF] text-[#1E40AF]'
-                : 'border-transparent text-slate-600 hover:text-[#1E40AF]'
-            }`}
-          >
-            <LayoutDashboard size={16} /> Dashboard
-          </Link>
-          <a
-            href="#contact"
-            className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold border-b-2 border-transparent text-slate-600 hover:text-[#1E40AF] transition"
-          >
-            <PhoneCall size={16} /> Contact
-          </a>
-        </div>
-
-        {/* Right Side Controls & Notification Center Bell */}
-        <div className="flex items-center gap-3">
-          {activeToken && (
+    <>
+      <a href="#content" className="cf-skip">Skip to workspace</a>
+      <aside className="cf-sidebar">
+        <Link to="/submit" className="cf-brand"><img src="/india-emblem.svg" alt="Emblem of India" className="zero-india-emblem"/><div>PROJECT ZERO<small>Independent civic demo</small></div></Link>
+        <Link to="/activity?filter=all" className="cf-workspace"><BarChart3 size={21}/><div>Service activity<small>Explore the live demo →</small></div></Link>
+        <p className="cf-nav-label">{adminToken ? 'OPERATIONS' : 'CITIZEN SERVICES'}</p>
+        <nav aria-label="Main navigation" className="cf-nav">
+          {links.map(([path,label,Icon]) => <Link key={path} to={path} className={isActive(path) ? 'active' : ''} aria-current={isActive(path) ? 'page' : undefined}><Icon size={18} strokeWidth={1.6}/>{label}</Link>)}
+        </nav>
+        <div className="cf-sidebar-bottom">
+          <div className="cf-local-note"><Monitor size={18}/><div>Public service desk<small>Grievance intake, routing<br/>and resolution tracking</small></div></div>
+          <Link to="/technology" className="cf-project-link"><Info size={18}/>About Project</Link>
+          {adminToken && <Link to="/submit" className="cf-project-link"><Plus size={18}/>Register a grievance</Link>}
+          <div className="zero-sidebar-actions">          {activeToken && (
             <div className="relative" ref={dropdownRef}>
               <button
                 type="button"
@@ -305,7 +254,7 @@ export default function Navbar() {
                   setShowDropdown(!showDropdown);
                   if (!showDropdown) fetchNotifications();
                 }}
-                className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-[#1E40AF] transition focus:outline-none cursor-pointer"
+                className="relative rounded-full p-2 text-slate-600 hover:bg-slate-100 hover:text-[#31624e] transition focus:outline-none cursor-pointer"
                 aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
                 aria-expanded={showDropdown}
                 aria-haspopup="true"
@@ -321,11 +270,11 @@ export default function Navbar() {
 
               {/* Enhanced Notification Dropdown Panel */}
               {showDropdown && (
-                <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-96 rounded-xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden transition-all">
+                <div className="zero-notifications absolute left-0 bottom-full mb-2 w-[calc(100vw-2rem)] sm:w-96 rounded-xl border border-slate-200 bg-white shadow-2xl z-50 overflow-hidden transition-all">
                   {/* Header */}
                   <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50/90 px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <Bell size={16} className="text-[#1E40AF]" />
+                      <Bell size={16} className="text-[#31624e]" />
                       <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900">
                         Notifications
                       </h3>
@@ -339,7 +288,7 @@ export default function Navbar() {
                       <button
                         type="button"
                         onClick={handleMarkAllAsRead}
-                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#1E40AF] hover:text-[#16327e] hover:underline cursor-pointer"
+                        className="inline-flex items-center gap-1 text-[11px] font-bold text-[#31624e] hover:text-[#244d3d] hover:underline cursor-pointer"
                       >
                         <CheckCheck size={14} />
                         <span>Mark all read</span>
@@ -351,7 +300,7 @@ export default function Navbar() {
                   <div className="max-h-[75vh] sm:max-h-96 overflow-y-auto divide-y divide-slate-100">
                     {loading && notifications.length === 0 ? (
                       <div className="p-8 text-center text-xs text-slate-500 flex flex-col items-center gap-2">
-                        <RefreshCw size={18} className="animate-spin text-[#1E40AF]" />
+                        <RefreshCw size={18} className="animate-spin text-[#31624e]" />
                         <span>Loading notification center...</span>
                       </div>
                     ) : notifications.length === 0 ? (
@@ -395,10 +344,10 @@ export default function Navbar() {
 
                               {notif.grievance_id && (
                                 <div className="mt-1.5 flex items-center justify-between">
-                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] font-extrabold text-[#1E40AF] bg-blue-100/70 px-1.5 py-0.5 rounded">
+                                  <span className="inline-flex items-center gap-1 font-mono text-[10px] font-extrabold text-[#31624e] bg-blue-100/70 px-1.5 py-0.5 rounded">
                                     {notif.grievance_id}
                                   </span>
-                                  <span className="text-[10px] text-[#1E40AF] font-bold hover:underline">View details →</span>
+                                  <span className="text-[10px] text-[#31624e] font-bold hover:underline">View details →</span>
                                 </div>
                               )}
                             </div>
@@ -407,7 +356,7 @@ export default function Navbar() {
                               <button
                                 type="button"
                                 onClick={(e) => handleMarkAsRead(e, notif.id)}
-                                className="mt-0.5 p-1 text-slate-400 hover:text-[#1E40AF] hover:bg-blue-100/50 rounded transition"
+                                className="mt-0.5 p-1 text-slate-400 hover:text-[#31624e] hover:bg-blue-100/50 rounded transition"
                                 title="Mark as read"
                                 aria-label="Mark notification as read"
                               >
@@ -424,64 +373,11 @@ export default function Navbar() {
             </div>
           )}
 
-          {!adminToken ? (
-            <>
-              <Link
-                to="/admin/login"
-                className="hidden items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition sm:inline-flex"
-              >
-                <LogIn size={14} /> Employee Access
-              </Link>
-              <Link
-                to="/submit"
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E40AF] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#16327e] transition shadow-xs"
-              >
-                <UserPlus size={14} /> Register Grievance
-              </Link>
-            </>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Link
-                to="/admin/dashboard"
-                className="hidden items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition sm:inline-flex"
-              >
-                <CircleUserRound size={14} className="text-[#1E40AF]" /> Admin Profile
-              </Link>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 px-3.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 transition cursor-pointer"
-              >
-                <LogOut size={14} /> Logout
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="flex items-center justify-around border-t border-slate-200 bg-slate-50 px-2 py-2 text-[10px] font-semibold uppercase tracking-wider text-slate-600 lg:hidden">
-        <Link to="/" className={`flex flex-col items-center gap-0.5 ${isActive('/') ? 'text-[#1E40AF]' : ''}`}>
-          <House size={16} /> Home
-        </Link>
-        <Link to="/submit" className={`flex flex-col items-center gap-0.5 ${isActive('/submit') ? 'text-[#1E40AF]' : ''}`}>
-          <FileText size={16} /> Submit
-        </Link>
-        <Link to="/history" className={`flex flex-col items-center gap-0.5 ${isActive('/history') ? 'text-[#1E40AF]' : ''}`}>
-          <SearchCheck size={16} /> Track
-        </Link>
-        {adminToken ? (
-          <Link to="/admin/dashboard" className={`flex flex-col items-center gap-0.5 ${isActive('/admin/dashboard') ? 'text-[#1E40AF]' : ''}`}>
-            <LayoutDashboard size={16} /> Dashboard
-          </Link>
-        ) : (
-          <a href="#contact" className="flex flex-col items-center gap-0.5">
-            <PhoneCall size={16} /> Contact
-          </a>
-        )}
-      </div>
-    </header>
+<button type="button" className="zero-sidebar-exit" onClick={handleLogout}><LogOut size={17}/>{adminToken?'Sign out':'Exit workspace'}</button></div><div className="cf-profile"><span className="cf-avatar">{adminToken ? 'AD' : 'CT'}</span><div>{adminToken ? 'Administrator' : profile?.name || 'Guest workspace'}<small>{adminToken ? 'Officer access' : 'Report & track'}</small></div></div>
+        </div>
+      </aside>
+
+    </>
   );
 }
-
-

@@ -27,6 +27,7 @@ import {
 export default function History() {
   const location = useLocation();
 
+  const [syncing, setSyncing] = useState(false);
   const [activeTab, setActiveTab] = useState('track'); // 'track' or 'ledger'
   const [complaints, setComplaints] = useState([]);
   const [total, setTotal] = useState(0);
@@ -49,7 +50,7 @@ export default function History() {
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  // Fetch Public Ledger complaints
+  // Fetch Grievance records complaints
   const fetchComplaints = useCallback(async () => {
     if (activeTab !== 'ledger') return;
     setLoading(true);
@@ -157,6 +158,8 @@ export default function History() {
       setTrackId(idParam);
       setActiveTab('track');
       performTrackSearch(idParam);
+    } else if (params.get('view') === 'ledger') {
+      setActiveTab('ledger');
     }
   }, [location.search]);
 
@@ -191,7 +194,7 @@ export default function History() {
     const mapping = {
       SUBMITTED: 'bg-amber-50 text-amber-800 border-amber-300 font-semibold',
       ASSIGNED: 'bg-indigo-50 text-indigo-800 border-indigo-300 font-semibold',
-      IN_PROGRESS: 'bg-blue-50 text-[#1E40AF] border-blue-300 font-bold',
+      IN_PROGRESS: 'bg-blue-50 text-[#31624e] border-blue-300 font-bold',
       RESOLVED: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
       CLOSED: 'bg-slate-100 text-slate-700 border-slate-300 font-medium',
       REOPENED: 'bg-rose-50 text-rose-800 border-rose-300 font-bold',
@@ -262,7 +265,7 @@ export default function History() {
       return { text: 'Deadline Exceeded', isBreached: true, isNear: false };
     }
     if (!slaDeadline) {
-      return { text: 'Standard SLA Window (48h-72h)', isBreached: false, isNear: false };
+      return { text: 'No deadline scheduled', isBreached: false, isNear: false };
     }
 
     const deadlineTime = new Date(slaDeadline).getTime();
@@ -353,38 +356,38 @@ export default function History() {
       {/* Title & Portal Header */}
       <div className="mb-8 flex flex-col gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-[#1E40AF]">
-            <ShieldCheck size={14} /> Official Grievance Tracking Portal
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-semibold text-[#31624e]">
+            <ShieldCheck size={14} /> Citizen services / case tracking
           </div>
           <h1 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
-            Complaint Tracking & Status History
+            Track a grievance
           </h1>
           <p className="mt-1 text-xs sm:text-sm text-slate-600">
-            Track real-time resolution progress of your grievance or inspect the transparent public redressal ledger.
+            Find a record, review its status, and follow the response history.
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             to="/submit"
-            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#1E40AF] px-4 py-2 text-xs font-bold text-white shadow hover:bg-[#16327e] transition"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#31624e] px-4 py-2 text-xs font-bold text-white shadow hover:bg-[#244d3d] transition"
           >
             <PlusCircle size={14} />
             <span>Submit Complaint</span>
           </Link>
           <button
             type="button"
-            onClick={() => {
-              if (activeTab === 'track' && trackId) {
-                performTrackSearch(trackId);
-              } else {
-                fetchComplaints();
-              }
+            onClick={async () => {
+              setSyncing(true);
+              const start=Date.now();
+              try { if(activeTab==='track' && trackId) await performTrackSearch(trackId); else await fetchComplaints(); }
+              finally { setTimeout(()=>setSyncing(false),Math.max(0,650-(Date.now()-start))); }
             }}
-            disabled={loading || trackLoading}
+            disabled={syncing || loading || trackLoading}
+            aria-busy={syncing}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition disabled:opacity-50"
           >
-            <RefreshCw size={13} className={loading || trackLoading ? 'animate-spin' : ''} />
-            <span>Sync</span>
+            <RefreshCw size={13} className={syncing || loading || trackLoading ? 'animate-spin' : ''} />
+            <span>{syncing ? 'Syncing…' : 'Sync'}</span>
           </button>
         </div>
       </div>
@@ -399,11 +402,11 @@ export default function History() {
           }}
           className={`px-6 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
             activeTab === 'track'
-              ? 'border-[#1E40AF] text-[#1E40AF] bg-blue-50/50'
+              ? 'border-[#31624e] text-[#31624e] bg-blue-50/50'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
           }`}
         >
-          Track Single Grievance
+          Track by reference
         </button>
         <button
           type="button"
@@ -413,11 +416,11 @@ export default function History() {
           }}
           className={`px-6 py-3 text-xs sm:text-sm font-bold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
             activeTab === 'ledger'
-              ? 'border-[#1E40AF] text-[#1E40AF] bg-blue-50/50'
+              ? 'border-[#31624e] text-[#31624e] bg-blue-50/50'
               : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
           }`}
         >
-          Public Redressal Ledger
+          Browse records
         </button>
       </div>
 
@@ -430,7 +433,7 @@ export default function History() {
               Track Grievance by Reference ID
             </h2>
             <p className="text-xs text-slate-600 mb-4">
-              Enter your official Grievance Reference ID below to view live resolution status, department assignment, and SLA timeline.
+              Enter the reference you received when you saved or submitted your grievance.
             </p>
 
             <form onSubmit={handleTrackSubmit} className="flex flex-col gap-3 sm:flex-row max-w-2xl">
@@ -440,14 +443,14 @@ export default function History() {
                   placeholder="GRV-2026-000001"
                   value={trackId}
                   onChange={(e) => setTrackId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-2.5 pl-10 text-xs sm:text-sm font-mono text-slate-900 outline-none transition-all focus:border-[#1E40AF] focus:bg-white focus:ring-2 focus:ring-blue-100"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-2.5 pl-10 text-xs sm:text-sm font-mono text-slate-900 outline-none transition-all focus:border-[#31624e] focus:bg-white focus:ring-2 focus:ring-blue-100"
                 />
                 <Search size={16} className="absolute left-3 top-3 text-slate-400" />
               </div>
               <button
                 type="submit"
                 disabled={trackLoading}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1E40AF] px-6 py-2.5 text-xs font-bold text-white shadow hover:bg-[#16327e] disabled:opacity-50 transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#31624e] px-6 py-2.5 text-xs font-bold text-white shadow hover:bg-[#244d3d] disabled:opacity-50 transition-all cursor-pointer"
               >
                 {trackLoading ? (
                   <RefreshCw size={15} className="animate-spin" />
@@ -500,7 +503,7 @@ export default function History() {
                     </span>
                   </div>
                   <div className="mt-1 flex items-center gap-3">
-                    <span className="font-mono text-xl sm:text-2xl font-extrabold text-[#1E40AF] select-all">
+                    <span className="font-mono text-xl sm:text-2xl font-extrabold text-[#31624e] select-all">
                       {trackedGrievance.grievance_id || trackedGrievance.id}
                     </span>
                     <button
@@ -533,10 +536,10 @@ export default function History() {
                 </div>
               </div>
 
-              {/* Redressal Lifecycle Timeline Stepper */}
+              {/* Resolution progress Stepper */}
               <div>
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-6 flex items-center gap-1.5">
-                  <Clock size={14} className="text-[#1E40AF]" /> Redressal Lifecycle Timeline
+                  <Clock size={14} className="text-[#31624e]" /> Redressal Lifecycle Timeline
                 </h3>
 
                 {/* Reopened Alert Banner */}
@@ -559,7 +562,7 @@ export default function History() {
                           step.state === 'complete'
                             ? 'border-emerald-600 bg-emerald-600 text-white'
                             : step.state === 'active'
-                            ? 'border-[#1E40AF] bg-[#1E40AF] text-white ring-4 ring-blue-100'
+                            ? 'border-[#31624e] bg-[#31624e] text-white ring-4 ring-blue-100'
                             : step.state === 'reopened'
                             ? 'border-rose-600 bg-rose-600 text-white ring-4 ring-rose-100'
                             : 'border-slate-300 bg-white text-slate-400'
@@ -574,7 +577,7 @@ export default function History() {
                           step.state === 'complete'
                             ? 'text-slate-800'
                             : step.state === 'active'
-                            ? 'text-[#1E40AF]'
+                            ? 'text-[#31624e]'
                             : step.state === 'reopened'
                             ? 'text-rose-700'
                             : 'text-slate-400'
@@ -598,7 +601,7 @@ export default function History() {
                           step.state === 'complete'
                             ? 'border-emerald-600 bg-emerald-600 text-white'
                             : step.state === 'active'
-                            ? 'border-[#1E40AF] bg-[#1E40AF] text-white'
+                            ? 'border-[#31624e] bg-[#31624e] text-white'
                             : step.state === 'reopened'
                             ? 'border-rose-600 bg-rose-600 text-white'
                             : 'border-slate-300 bg-white text-slate-400'
@@ -612,7 +615,7 @@ export default function History() {
                             step.state === 'complete'
                               ? 'text-slate-800'
                               : step.state === 'active'
-                              ? 'text-[#1E40AF]'
+                              ? 'text-[#31624e]'
                               : step.state === 'reopened'
                               ? 'text-rose-700'
                               : 'text-slate-400'
@@ -631,17 +634,17 @@ export default function History() {
               {statusHistory && statusHistory.length > 0 && (
                 <div className="border-t border-slate-200 pt-6">
                   <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mb-4">
-                    Official Status History & Officer Remarks
+                    Status history & remarks
                   </h3>
                   <div className="relative border-l-2 border-slate-200 pl-4 space-y-4 ml-2">
                     {statusHistory.map((event, i) => (
                       <div key={`${event.changed_at}-${i}`} className="relative group">
                         {/* Dot on line */}
-                        <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white bg-[#1E40AF] ring-2 ring-blue-100" />
+                        <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white bg-[#31624e] ring-2 ring-blue-100" />
                         <div className="rounded-lg border border-slate-200 bg-slate-50/50 p-3 text-xs">
                           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200/60 pb-1.5">
                             <span className="font-bold text-slate-900">
-                              Status updated to <span className="text-[#1E40AF]">{event.new_status}</span>
+                              Status updated to <span className="text-[#31624e]">{event.new_status}</span>
                             </span>
                             <span className="text-[10px] text-slate-500">
                               {new Date(event.changed_at).toLocaleString(undefined, {
@@ -678,9 +681,9 @@ export default function History() {
                   <div className="space-y-4">
                     <div>
                       <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Assigned Department
+                        Department
                       </span>
-                      <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-[#1E40AF]">
+                      <span className="mt-1 inline-flex items-center gap-1.5 text-xs font-bold text-[#31624e]">
                         <Building2 size={14} />
                         {trackedGrievance.department || trackedGrievance.category}
                       </span>
@@ -776,13 +779,13 @@ export default function History() {
                         Expected Resolution SLA Deadline
                       </span>
                       <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-1.5">
-                        <Clock size={13} className="text-[#1E40AF]" />
+                        <Clock size={13} className="text-[#31624e]" />
                         {trackedGrievance.sla_deadline
                           ? new Date(trackedGrievance.sla_deadline).toLocaleString(undefined, {
                               dateStyle: 'long',
                               timeStyle: 'short',
                             })
-                          : 'Standard SLA Window (24h - 120h max target)'}
+                          : 'No deadline scheduled'}
                       </span>
                     </div>
 
@@ -803,7 +806,7 @@ export default function History() {
           {/* Empty Track State */}
           {!trackedGrievance && !trackLoading && !error && (
             <div className="rounded-xl border border-dashed border-slate-300 bg-white p-8 sm:p-12 text-center shadow-xs">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#1E40AF]">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-blue-50 text-[#31624e]">
                 <Inbox size={24} />
               </div>
               <h3 className="text-sm font-bold text-slate-900">No Grievance Selected</h3>
@@ -837,14 +840,14 @@ export default function History() {
                   placeholder="Search grievance descriptions or IDs..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-4 py-2.5 text-xs text-slate-900 outline-none transition focus:border-[#1E40AF] focus:bg-white"
+                  className="w-full rounded-lg border border-slate-300 bg-slate-50 pl-9 pr-4 py-2.5 text-xs text-slate-900 outline-none transition focus:border-[#31624e] focus:bg-white"
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-lg bg-[#1E40AF] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-[#16327e] transition cursor-pointer"
+                  className="rounded-lg bg-[#31624e] px-5 py-2.5 text-xs font-bold text-white shadow hover:bg-[#244d3d] transition cursor-pointer"
                 >
                   Search
                 </button>
@@ -860,7 +863,7 @@ export default function History() {
 
             <div className="mt-4 flex flex-wrap items-center gap-4 border-t border-slate-200 pt-4 text-xs text-slate-600">
               <div className="flex items-center gap-1.5 font-bold text-slate-800">
-                <Filter size={14} className="text-[#1E40AF]" /> Filters:
+                <Filter size={14} className="text-[#31624e]" /> Filters:
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="font-semibold text-slate-700">Category:</span>
@@ -870,7 +873,7 @@ export default function History() {
                     setCategory(e.target.value);
                     setPage(1);
                   }}
-                  className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                  className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                 >
                   <option value="All">All Categories</option>
                   <option value="Water">Water</option>
@@ -888,7 +891,7 @@ export default function History() {
                     setPriority(e.target.value);
                     setPage(1);
                   }}
-                  className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                  className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                 >
                   <option value="All">All Priorities</option>
                   <option value="High">High Priority</option>
@@ -904,7 +907,7 @@ export default function History() {
                     setStatus(e.target.value);
                     setPage(1);
                   }}
-                  className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                  className="rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                 >
                   <option value="All">All Statuses</option>
                   <option value="SUBMITTED">Submitted</option>
@@ -935,7 +938,7 @@ export default function History() {
             </div>
           )}
 
-          {/* Public Ledger Table Card */}
+          {/* Grievance records Table Card */}
           <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
@@ -976,7 +979,7 @@ export default function History() {
                           {parseComplaintText(item.complaint_text).preview}
                         </td>
                         <td className="p-3.5">
-                          <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-[#1E40AF]">
+                          <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-[#31624e]">
                             {item.department || item.category}
                           </span>
                         </td>
@@ -999,7 +1002,7 @@ export default function History() {
                               setActiveTab('track');
                               performTrackSearch(targetId);
                             }}
-                            className="inline-flex items-center gap-1 text-[#1E40AF] hover:text-[#16327e] font-bold text-xs"
+                            className="inline-flex items-center gap-1 text-[#31624e] hover:text-[#244d3d] font-bold text-xs"
                           >
                             <span>Track</span>
                             <ArrowRight size={12} />
@@ -1016,7 +1019,7 @@ export default function History() {
                           <button
                             type="button"
                             onClick={handleResetFilters}
-                            className="mt-2 text-xs font-bold text-[#1E40AF] underline"
+                            className="mt-2 text-xs font-bold text-[#31624e] underline"
                           >
                             Reset filters
                           </button>
@@ -1041,7 +1044,7 @@ export default function History() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1 || loading}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#1E40AF] disabled:opacity-40"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#31624e] disabled:opacity-40"
                 >
                   <ChevronLeft size={15} />
                 </button>
@@ -1052,7 +1055,7 @@ export default function History() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages || loading}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#1E40AF] disabled:opacity-40"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#31624e] disabled:opacity-40"
                 >
                   <ChevronRight size={15} />
                 </button>

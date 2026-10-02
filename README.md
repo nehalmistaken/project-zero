@@ -1,6 +1,10 @@
-# AI-Based Smart Public Grievance Management System
+# PROJECT ZERO — AI-Based Smart Public Grievance System
 
 **GrievanceAI** is an enterprise-grade, end-to-end municipal grievance redressal portal. It integrates Natural Language Processing (NLP) machine learning models for real-time category classification, AI-assisted priority scoring, automated department assignment, Service Level Agreement (SLA) deadline tracking, escalation workflows, advisory duplicate grievance detection, real-time notifications, admin analytics dashboards, and role-based access security.
+
+## PROJECT ZERO frontend
+
+PROJECT ZERO includes local citizen registration, guest access, a trained browser NLP classifier, and a separate simulated service activity board. Local mode runs without Python; connected mode uses the existing Flask service. Start with [the local setup guide](docs/civicflow-frontend.md). The Flask API and machine learning implementation are preserved.
 
 ---
 
@@ -28,7 +32,7 @@
 ## 🛠️ Technology Stack
 
 * **Backend**: Python 3.11+, Flask REST API, PyJWT, Gunicorn (Production WSGI), Flask-CORS.
-* **Frontend**: React 18, Vite 8, Tailwind CSS, Recharts, Lucide React Icons, Axios.
+* **Frontend**: React 19, Vite 8, Tailwind CSS, Recharts, Lucide React Icons, Axios.
 * **Machine Learning**: `scikit-learn` (Logistic Regression classifier with TF-IDF vectorization), `pandas`, `numpy`, NLTK VADER. Evaluated across Multinomial Naive Bayes, Linear SVM, and Logistic Regression.
 * **Database Adapter**: Dual hybrid database engine supporting MongoDB Cloud Atlas cluster with automatic local SQLite (`complaints.db`) fallback.
 
@@ -241,3 +245,4 @@ CLOSED  REOPENED
 * **Role Isolation**: Admin endpoints require a valid Admin JWT token. Citizen session tokens are rejected with `403 Forbidden`.
 * **Public PII Protection**: Public API responses sanitize citizen personal data (`name`, `phone`, `location`, `address`).
 * **Query Injection Safety**: Parameterized placeholders eliminate SQL/NoSQL injection risks.
+

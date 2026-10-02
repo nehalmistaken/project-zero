@@ -5,6 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -28,7 +29,7 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || 'Something went wrong. Please try again.';
+    const message = error.response?.data?.message || (error.response ? 'The request could not be completed. Please try again.' : 'Cannot reach the local API. Start the Flask service on port 5000, or use the local guest workspace.');
     
     // If token expired or unauthorized, clean local storage
     if (error.response?.status === 401) {
@@ -48,7 +49,7 @@ apiClient.interceptors.response.use(
   }
 );
 
-export const apiService = {
+const connectedApi = {
   // Auth
   login: (username, password) => {
     return apiClient.post('/auth/login', { username, password });
@@ -109,4 +110,5 @@ export const apiService = {
   }
 };
 
+export const apiService = Object.fromEntries(Object.entries(connectedApi).map(([name,fn]) => [name,(...args) => sessionStorage.getItem('project_mode') === 'local' && ['predict','submitComplaint','getComplaints','getComplaintByGrievanceId','getComplaintHistory','getNotifications','markNotificationAsRead','markAllNotificationsAsRead'].includes(name) ? import('./localApi').then(({localApi})=>localApi[name](...args)) : fn(...args)]));
 export default apiService;

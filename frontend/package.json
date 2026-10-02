@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node tests/local-workflow.mjs && node tests/zero-features.mjs && node tests/realism-features.mjs",
+    "start": "vite --host 127.0.0.1"
   },
   "dependencies": {
     "axios": "^1.18.1",

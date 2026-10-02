@@ -1,0 +1,141 @@
+{
+  "algorithm": "Multinomial Naive Bayes",
+  "features": "Unicode Hindi/English word unigrams and bigrams; Laplace smoothing",
+  "seed": 42,
+  "unique_samples": 4324,
+  "training_samples": 3590,
+  "test_samples": 734,
+  "accuracy": 0.8161,
+  "balanced_accuracy": 0.7017,
+  "confusion_matrix": {
+    "Electricity": {
+      "Electricity": 38,
+      "Garbage": 6,
+      "Others": 13,
+      "Road": 1,
+      "Water": 3
+    },
+    "Garbage": {
+      "Electricity": 0,
+      "Garbage": 42,
+      "Others": 21,
+      "Road": 0,
+      "Water": 0
+    },
+    "Others": {
+      "Electricity": 11,
+      "Garbage": 20,
+      "Others": 435,
+      "Road": 13,
+      "Water": 4
+    },
+    "Road": {
+      "Electricity": 1,
+      "Garbage": 8,
+      "Others": 14,
+      "Road": 37,
+      "Water": 0
+    },
+    "Water": {
+      "Electricity": 1,
+      "Garbage": 1,
+      "Others": 8,
+      "Road": 10,
+      "Water": 47
+    }
+  },
+  "indian_template_holdout": {
+    "samples": 614,
+    "accuracy": 0.8274,
+    "balanced_accuracy": 0.5624,
+    "confusion_matrix": {
+      "Electricity": {
+        "Electricity": 16,
+        "Garbage": 5,
+        "Others": 13,
+        "Road": 0,
+        "Water": 3
+      },
+      "Garbage": {
+        "Electricity": 0,
+        "Garbage": 18,
+        "Others": 21,
+        "Road": 0,
+        "Water": 0
+      },
+      "Others": {
+        "Electricity": 9,
+        "Garbage": 8,
+        "Others": 435,
+        "Road": 7,
+        "Water": 0
+      },
+      "Road": {
+        "Electricity": 0,
+        "Garbage": 8,
+        "Others": 14,
+        "Road": 14,
+        "Water": 0
+      },
+      "Water": {
+        "Electricity": 0,
+        "Garbage": 0,
+        "Others": 8,
+        "Road": 10,
+        "Water": 25
+      }
+    }
+  },
+  "original_holdout": {
+    "samples": 120,
+    "accuracy": 0.7583,
+    "balanced_accuracy": 0.7583,
+    "confusion_matrix": {
+      "Electricity": {
+        "Electricity": 22,
+        "Garbage": 1,
+        "Others": 0,
+        "Road": 1,
+        "Water": 0
+      },
+      "Garbage": {
+        "Electricity": 0,
+        "Garbage": 24,
+        "Others": 0,
+        "Road": 0,
+        "Water": 0
+      },
+      "Others": {
+        "Electricity": 2,
+        "Garbage": 12,
+        "Others": 0,
+        "Road": 6,
+        "Water": 4
+      },
+      "Road": {
+        "Electricity": 1,
+        "Garbage": 0,
+        "Others": 0,
+        "Road": 23,
+        "Water": 0
+      },
+      "Water": {
+        "Electricity": 1,
+        "Garbage": 1,
+        "Others": 0,
+        "Road": 0,
+        "Water": 22
+      }
+    }
+  },
+  "source": "https://www.kaggle.com/datasets/abhisheksingh016/citizen-grievance-dataset",
+  "source_author": "Abhishek Singh",
+  "source_license": "CC0: Public Domain",
+  "source_version": 3,
+  "languages": [
+    "English",
+    "Hindi",
+    "Hinglish"
+  ],
+  "limitations": "Synthetic Indian grievance examples plus repository examples. External template holdout is separate; exact duplicate test text removed from training. Broad departments map to Others. Not a real-world benchmark; scores are uncalibrated. Priority remains rule-based."
+}

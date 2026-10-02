@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { apiService } from '../services/api';
 import {
   PieChart,
@@ -27,19 +27,13 @@ import {
   Inbox,
   AlertCircle,
   Search,
-  LayoutDashboard,
-  FileText,
   Building2,
   Sparkles,
   Download,
-  Users,
-  Settings,
-  LogOut,
   ChevronRight as ChevronRightIcon,
   Filter,
   X,
   Flame,
-  ShieldCheck,
   Copy,
   Eye,
   History,
@@ -48,7 +42,15 @@ import {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const allowedTabs = ['dashboard', 'complaints', 'departments', 'ai_analysis', 'reports', 'users', 'settings'];
+  const requestedTab = searchParams.get('tab') || 'dashboard';
+  const activeTab = allowedTabs.includes(requestedTab) ? requestedTab : 'dashboard';
+  const setActiveTab = tab => setSearchParams(previous => {
+    const next = new URLSearchParams(previous);
+    next.set('tab', tab);
+    return next;
+  });
   const [stats, setStats] = useState(null);
   const [complaints, setComplaints] = useState([]);
   const [total, setTotal] = useState(0);
@@ -102,6 +104,10 @@ export default function Dashboard() {
   const [slaStatus, setSlaStatus] = useState('All');
   const [page, setPage] = useState(1);
   const limit = 6;
+  const linkedSearch = searchParams.get('search');
+  useEffect(() => {
+    if (linkedSearch) { setSearch(linkedSearch); setPage(1); }
+  }, [linkedSearch]);
 
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
@@ -374,11 +380,6 @@ export default function Dashboard() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    navigate('/');
-  };
 
   const handleResetFilters = () => {
     setSearch('');
@@ -399,7 +400,7 @@ export default function Dashboard() {
   };
 
   const CATEGORY_COLORS = {
-    Water: '#1E40AF',
+    Water: '#31624e',
     Electricity: '#EA580C',
     Road: '#16A34A',
     Garbage: '#64748B',
@@ -418,7 +419,7 @@ export default function Dashboard() {
     const mapping = {
       SUBMITTED: 'bg-amber-50 text-amber-800 border-amber-300 font-semibold',
       ASSIGNED: 'bg-indigo-50 text-indigo-800 border-indigo-300 font-semibold',
-      IN_PROGRESS: 'bg-blue-50 text-[#1E40AF] border-blue-300 font-bold',
+      IN_PROGRESS: 'bg-blue-50 text-[#31624e] border-blue-300 font-bold',
       RESOLVED: 'bg-emerald-50 text-emerald-800 border-emerald-300 font-bold',
       CLOSED: 'bg-slate-100 text-slate-700 border-slate-300 font-medium',
       REOPENED: 'bg-rose-50 text-rose-800 border-rose-300 font-bold',
@@ -562,7 +563,7 @@ export default function Dashboard() {
 
   const getCategoryBadgeClass = (cat) => {
     const mapping = {
-      Water: 'bg-blue-50 text-[#1E40AF] border-blue-300',
+      Water: 'bg-blue-50 text-[#31624e] border-blue-300',
       Electricity: 'bg-amber-50 text-amber-800 border-amber-300',
       Road: 'bg-emerald-50 text-emerald-800 border-emerald-300',
       Garbage: 'bg-slate-100 text-slate-700 border-slate-300',
@@ -680,80 +681,23 @@ export default function Dashboard() {
     (slaStatus !== 'All' ? 1 : 0);
 
   return (
-    <div className="flex-1 flex flex-col md:flex-row min-h-[85vh] bg-slate-100 border-b border-slate-200">
-      {/* Sidebar Navigation */}
-      <aside className="w-full md:w-64 bg-[#0f172a] text-slate-300 border-r border-slate-800 shrink-0">
-        <div className="p-3 sm:p-4 border-b border-slate-800 bg-[#020617] flex items-center justify-between gap-2.5">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck size={18} className="text-blue-400" />
-            <span className="text-xs font-extrabold uppercase tracking-wider text-white">
-              Officer Console
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="md:hidden flex items-center gap-1 text-[11px] font-bold text-rose-400 hover:text-rose-300 p-1"
-            title="Exit System"
-          >
-            <LogOut size={14} /> Exit
-          </button>
-        </div>
-        <nav className="p-2 md:p-3 flex md:flex-col overflow-x-auto gap-1 text-slate-400">
-          {[
-            { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-            { id: 'complaints', name: 'Complaints Queue', icon: FileText },
-            { id: 'departments', name: 'Departments', icon: Building2 },
-            { id: 'ai_analysis', name: 'AI NLP Classifier', icon: Sparkles },
-            { id: 'reports', name: 'Governance Reports', icon: Download },
-            { id: 'users', name: 'Officer Accounts', icon: Users },
-            { id: 'settings', name: 'Console Settings', icon: Settings },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-bold transition whitespace-nowrap shrink-0 cursor-pointer ${
-                  activeTab === item.id
-                    ? 'bg-[#1E40AF] text-white shadow-xs'
-                    : 'hover:bg-slate-800/80 text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                <Icon size={15} /> {item.name}
-              </button>
-            );
-          })}
-
-          <div className="hidden md:block border-t border-slate-800/80 pt-3 mt-4">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex w-full items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-xs font-bold text-rose-400 hover:bg-rose-950/30 hover:text-rose-300 transition cursor-pointer"
-            >
-              <LogOut size={15} /> Exit System
-            </button>
-          </div>
-        </nav>
-      </aside>
-
+    <div className="cf-dashboard">
       {/* Main Content Dashboard Area */}
-      <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 overflow-y-auto">
+      <div className="cf-dashboard-main space-y-6">
         {/* Top Header Toolbar */}
-        <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="cf-page-heading flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-[#1E40AF] border border-blue-200 mb-1">
-              <Building2 size={12} /> Official Municipal Grievance Administration Console
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-[#31624e] border border-blue-200 mb-1">
+              <Building2 size={12} /> City operations / service delivery
             </div>
             <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
-              {activeTab === 'dashboard' && 'Grievance Administration Dashboard'}
-              {activeTab === 'complaints' && 'Redressal Backlog & Resolution Queue'}
-              {activeTab === 'departments' && 'Operational Municipal Departments'}
-              {activeTab === 'ai_analysis' && 'AI Natural Language Classifier Inspection'}
-              {activeTab === 'reports' && 'Governance & SLA Performance Reports'}
-              {activeTab === 'users' && 'Officer Accounts Management'}
-              {activeTab === 'settings' && 'Console Administration Settings'}
+              {activeTab === 'dashboard' && 'Service overview'}
+              {activeTab === 'complaints' && 'Grievance queue'}
+              {activeTab === 'departments' && 'Departments'}
+              {activeTab === 'ai_analysis' && 'AI intelligence'}
+              {activeTab === 'reports' && 'Service performance'}
+              {activeTab === 'users' && 'Officer accounts'}
+              {activeTab === 'settings' && 'Workspace settings'}
             </h1>
             <p className="text-xs text-slate-600 mt-0.5">
               Monitor SLA compliance, review auto-routed categories, assign departments, and process citizen tickets.
@@ -766,7 +710,7 @@ export default function Dashboard() {
             className="inline-flex items-center gap-1.5 self-start rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50 transition cursor-pointer"
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
-            <span>Sync Database</span>
+            <span>Refresh data</span>
           </button>
         </div>
 
@@ -792,10 +736,10 @@ export default function Dashboard() {
           <div className="space-y-6">
             {/* Top KPI Cards Grid */}
             {stats ? (
-              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 cf-kpi-grid">
                 {/* Total */}
                 <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow">
-                  <div className="rounded-lg bg-blue-50 p-2.5 text-[#1E40AF] border border-blue-200">
+                  <div className="rounded-lg bg-blue-50 p-2.5 text-[#31624e] border border-blue-200">
                     <Inbox size={20} />
                   </div>
                   <div>
@@ -1006,7 +950,7 @@ export default function Dashboard() {
                           <XAxis dataKey="date" stroke="#64748b" fontSize={9} tickLine={false} />
                           <YAxis stroke="#64748b" fontSize={9} tickLine={false} />
                           <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }} />
-                          <Line type="monotone" dataKey="complaints" stroke="#1E40AF" strokeWidth={2.5} dot={{ r: 3, fill: '#1E40AF' }} />
+                          <Line type="monotone" dataKey="complaints" stroke="#31624e" strokeWidth={2.5} dot={{ r: 3, fill: '#31624e' }} />
                         </LineChart>
                       </ResponsiveContainer>
                     ) : (
@@ -1030,7 +974,7 @@ export default function Dashboard() {
                   <button
                     type="button"
                     onClick={() => setActiveTab('complaints')}
-                    className="text-[11px] font-bold text-[#1E40AF] hover:underline flex items-center gap-1"
+                    className="text-[11px] font-bold text-[#31624e] hover:underline flex items-center gap-1"
                   >
                     <span>View all queue</span>
                     <ChevronRightIcon size={12} />
@@ -1117,12 +1061,12 @@ export default function Dashboard() {
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search GRV-ID or description..."
-                    className="w-full sm:w-64 rounded-lg border border-slate-300 bg-slate-50 py-2 pl-9 pr-3 text-xs outline-none transition focus:border-[#1E40AF] focus:bg-white"
+                    className="w-full sm:w-64 rounded-lg border border-slate-300 bg-slate-50 py-2 pl-9 pr-3 text-xs outline-none transition focus:border-[#31624e] focus:bg-white"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="rounded-lg bg-[#1E40AF] px-4 py-2 text-xs font-bold text-white hover:bg-[#16327e] shadow-xs cursor-pointer"
+                  className="rounded-lg bg-[#31624e] px-4 py-2 text-xs font-bold text-white hover:bg-[#244d3d] shadow-xs cursor-pointer"
                 >
                   Search
                 </button>
@@ -1133,7 +1077,7 @@ export default function Dashboard() {
             <div className="space-y-3 rounded-lg border border-slate-200 bg-slate-50/70 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-extrabold text-slate-800">
-                  <Filter size={14} className="text-[#1E40AF]" />
+                  <Filter size={14} className="text-[#31624e]" />
                   <span>Filter Criteria ({activeFiltersCount} active)</span>
                 </div>
                 {activeFiltersCount > 0 && (
@@ -1153,7 +1097,7 @@ export default function Dashboard() {
                   <select
                     value={department}
                     onChange={(e) => { setDepartment(e.target.value); setPage(1); }}
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                   >
                     <option value="All">All Departments</option>
                     <option value="Water Supply">Water Supply</option>
@@ -1169,7 +1113,7 @@ export default function Dashboard() {
                   <select
                     value={category}
                     onChange={(e) => { setCategory(e.target.value); setPage(1); }}
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                   >
                     <option value="All">All Categories</option>
                     <option value="Water">Water</option>
@@ -1185,7 +1129,7 @@ export default function Dashboard() {
                   <select
                     value={priority}
                     onChange={(e) => { setPriority(e.target.value); setPage(1); }}
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                   >
                     <option value="All">All Priorities</option>
                     <option value="High">High</option>
@@ -1199,7 +1143,7 @@ export default function Dashboard() {
                   <select
                     value={status}
                     onChange={(e) => { setStatus(e.target.value); setPage(1); }}
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                   >
                     <option value="All">All Statuses</option>
                     <option value="SUBMITTED">Submitted</option>
@@ -1216,7 +1160,7 @@ export default function Dashboard() {
                   <select
                     value={slaStatus}
                     onChange={(e) => { setSlaStatus(e.target.value); setPage(1); }}
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                   >
                     <option value="All">All SLA Statuses</option>
                     <option value="WITHIN_SLA">Within SLA</option>
@@ -1230,7 +1174,7 @@ export default function Dashboard() {
                   <select
                     value={escalation}
                     onChange={(e) => { setEscalation(e.target.value); setPage(1); }}
-                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-md border border-slate-300 bg-white px-2 py-1.5 text-xs text-slate-800 outline-none focus:border-[#31624e]"
                   >
                     <option value="All">All Escalations</option>
                     <option value="NOT_ESCALATED">Normal</option>
@@ -1308,7 +1252,7 @@ export default function Dashboard() {
                                 value={item.department || ''}
                                 onChange={(event) => handleUpdateDepartment(item.id, event.target.value)}
                                 disabled={updatingId === item.id}
-                                className="max-w-[170px] rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-bold text-[#1E40AF] outline-none disabled:opacity-50 cursor-pointer"
+                                className="max-w-[170px] rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-[10px] font-bold text-[#31624e] outline-none disabled:opacity-50 cursor-pointer"
                                 aria-label={`Department for complaint ${item.id}`}
                               >
                                 {DEPARTMENT_OPTIONS.map((deptOpt) => (
@@ -1365,7 +1309,7 @@ export default function Dashboard() {
                                   className="flex items-center gap-1 rounded border border-slate-300 bg-slate-50 px-2 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-100 shadow-2xs cursor-pointer"
                                   title="View full complaint details & history"
                                 >
-                                  <Eye size={11} className="text-[#1E40AF]" /> Inspect
+                                  <Eye size={11} className="text-[#31624e]" /> Inspect
                                 </button>
 
                                 {item.status === 'SUBMITTED' && (
@@ -1373,7 +1317,7 @@ export default function Dashboard() {
                                     type="button"
                                     onClick={() => handleDirectStatusUpdate(item.id, 'ASSIGNED')}
                                     disabled={updatingId === item.id}
-                                    className="flex items-center gap-1 rounded bg-[#1E40AF] px-2.5 py-1 text-[10px] font-bold text-white hover:bg-[#16327e] disabled:opacity-40 shadow-xs cursor-pointer"
+                                    className="flex items-center gap-1 rounded bg-[#31624e] px-2.5 py-1 text-[10px] font-bold text-white hover:bg-[#244d3d] disabled:opacity-40 shadow-xs cursor-pointer"
                                   >
                                     <Play size={10} /> Assign
                                   </button>
@@ -1383,7 +1327,7 @@ export default function Dashboard() {
                                     type="button"
                                     onClick={() => handleDirectStatusUpdate(item.id, 'IN_PROGRESS')}
                                     disabled={updatingId === item.id}
-                                    className="flex items-center gap-1 rounded bg-[#1E40AF] px-2.5 py-1 text-[10px] font-bold text-white hover:bg-[#16327e] disabled:opacity-40 shadow-xs cursor-pointer"
+                                    className="flex items-center gap-1 rounded bg-[#31624e] px-2.5 py-1 text-[10px] font-bold text-white hover:bg-[#244d3d] disabled:opacity-40 shadow-xs cursor-pointer"
                                   >
                                     <Play size={10} /> Start Work
                                   </button>
@@ -1428,7 +1372,7 @@ export default function Dashboard() {
                                     type="button"
                                     onClick={() => handleDirectStatusUpdate(item.id, 'IN_PROGRESS')}
                                     disabled={updatingId === item.id}
-                                    className="flex items-center gap-1 rounded bg-[#1E40AF] px-2.5 py-1 text-[10px] font-bold text-white hover:bg-[#16327e] disabled:opacity-40 shadow-xs cursor-pointer"
+                                    className="flex items-center gap-1 rounded bg-[#31624e] px-2.5 py-1 text-[10px] font-bold text-white hover:bg-[#244d3d] disabled:opacity-40 shadow-xs cursor-pointer"
                                   >
                                     Resume
                                   </button>
@@ -1458,7 +1402,7 @@ export default function Dashboard() {
                               <button
                                 type="button"
                                 onClick={handleResetFilters}
-                                className="mt-1 text-xs font-bold text-[#1E40AF] underline cursor-pointer"
+                                className="mt-1 text-xs font-bold text-[#31624e] underline cursor-pointer"
                               >
                                 Reset filters
                               </button>
@@ -1484,7 +1428,7 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1 || loading}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#1E40AF] disabled:opacity-40 cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#31624e] disabled:opacity-40 cursor-pointer"
                   >
                     <ChevronLeft size={15} />
                   </button>
@@ -1495,7 +1439,7 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={page === totalPages || loading}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#1E40AF] disabled:opacity-40 cursor-pointer"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-300 bg-white text-slate-600 hover:border-[#31624e] disabled:opacity-40 cursor-pointer"
                   >
                     <ChevronRight size={15} />
                   </button>
@@ -1519,7 +1463,7 @@ export default function Dashboard() {
               return (
                 <div key={dept.code} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#1E40AF]">{dept.name}</h3>
+                    <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#31624e]">{dept.name}</h3>
                     <span className="rounded-md bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600 border border-slate-200">
                       {dept.code}
                     </span>
@@ -1549,7 +1493,7 @@ export default function Dashboard() {
                         setCategory(dept.code);
                         setActiveTab('complaints');
                       }}
-                      className="text-[11px] font-bold text-[#1E40AF] hover:underline flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] font-bold text-[#31624e] hover:underline flex items-center gap-1 cursor-pointer"
                     >
                       <span>View complaints queue</span>
                       <ChevronRightIcon size={12} />
@@ -1578,7 +1522,7 @@ export default function Dashboard() {
                       onClick={() => setSelectedAIComplaint(item)}
                       className={`w-full py-3 px-3 text-left rounded-lg transition flex items-center justify-between gap-3 text-xs cursor-pointer ${
                         selectedAIComplaint && selectedAIComplaint.id === item.id
-                          ? 'bg-blue-50/80 border-l-4 border-[#1E40AF] shadow-2xs'
+                          ? 'bg-blue-50/80 border-l-4 border-[#31624e] shadow-2xs'
                           : 'hover:bg-slate-50'
                       }`}
                     >
@@ -1600,14 +1544,14 @@ export default function Dashboard() {
             {/* Right Column: AI Parameters */}
             <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
               <h3 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-1.5">
-                <Sparkles size={15} className="text-[#1E40AF]" /> NLP Model Prediction Parameters
+                <Sparkles size={15} className="text-[#31624e]" /> NLP Model Prediction Parameters
               </h3>
 
               {selectedAIComplaint ? (
                 <div className="mt-4 space-y-5 text-xs">
                   <div>
                     <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Reference ID</span>
-                    <span className="font-mono text-sm font-extrabold text-[#1E40AF]">{selectedAIComplaint.grievance_id || selectedAIComplaint.id}</span>
+                    <span className="font-mono text-sm font-extrabold text-[#31624e]">{selectedAIComplaint.grievance_id || selectedAIComplaint.id}</span>
                   </div>
 
                   <div>
@@ -1636,11 +1580,11 @@ export default function Dashboard() {
                   <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 space-y-3">
                     <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-500">
                       <span>Sentiment Score Analysis</span>
-                      <span className="text-[#1E40AF] font-mono">{getFrustrationPercentage(selectedAIComplaint.sentiment_score)}% Urgency</span>
+                      <span className="text-[#31624e] font-mono">{getFrustrationPercentage(selectedAIComplaint.sentiment_score)}% Urgency</span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
                       <div
-                        className="h-full rounded-full bg-[#1E40AF]"
+                        className="h-full rounded-full bg-[#31624e]"
                         style={{ width: `${getFrustrationPercentage(selectedAIComplaint.sentiment_score)}%` }}
                       />
                     </div>
@@ -1665,7 +1609,7 @@ export default function Dashboard() {
             <div className="border-b border-slate-100 pb-4 flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-extrabold uppercase tracking-wider text-slate-900">
-                  Governance & SLA Performance Reports
+                  Service performance
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Comprehensive audit analytics across SLA compliance, resolution times, escalations, and department performance.
@@ -1674,7 +1618,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-[#1E40AF] px-4 py-2 text-xs font-bold text-white shadow hover:bg-[#16327e] transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-[#31624e] px-4 py-2 text-xs font-bold text-white shadow hover:bg-[#244d3d] transition cursor-pointer"
               >
                 <Download size={14} /> Print Report
               </button>
@@ -1805,7 +1749,7 @@ export default function Dashboard() {
                         <XAxis dataKey="name" stroke="#64748b" fontSize={8} tickLine={false} interval={0} angle={-15} textAnchor="end" />
                         <YAxis stroke="#64748b" fontSize={9} tickLine={false} />
                         <Tooltip contentStyle={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '11px' }} />
-                        <Bar dataKey="hours" fill="#1E40AF" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="hours" fill="#31624e" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   ) : (
@@ -1941,7 +1885,7 @@ export default function Dashboard() {
                       <td className="p-3.5 pl-4 font-mono font-bold text-slate-800">{usr.id}</td>
                       <td className="p-3.5 font-bold text-slate-900">{usr.name}</td>
                       <td className="p-3.5 text-slate-600">{usr.role}</td>
-                      <td className="p-3.5 font-bold text-[#1E40AF]">{usr.domain}</td>
+                      <td className="p-3.5 font-bold text-[#31624e]">{usr.domain}</td>
                       <td className="p-3.5 text-right text-slate-500 text-[11px]">{usr.security}</td>
                     </tr>
                   ))}
@@ -1966,18 +1910,18 @@ export default function Dashboard() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">Classification Threshold</label>
-                    <input type="range" min="0" max="100" defaultValue="75" className="w-full accent-[#1E40AF]" />
+                    <input type="range" min="0" max="100" defaultValue="75" className="w-full accent-[#31624e]" />
                     <div className="flex justify-between text-[10px] text-slate-500 mt-1">
                       <span>Manual review threshold</span>
-                      <span className="font-bold text-[#1E40AF]">75% confidence</span>
+                      <span className="font-bold text-[#31624e]">75% confidence</span>
                     </div>
                   </div>
                   <div>
                     <label className="block text-slate-700 font-bold mb-1">Frustration Score Escalation Trigger</label>
-                    <input type="range" min="0" max="100" defaultValue="60" className="w-full accent-[#1E40AF]" />
+                    <input type="range" min="0" max="100" defaultValue="60" className="w-full accent-[#31624e]" />
                     <div className="flex justify-between text-[10px] text-slate-500 mt-1">
                       <span>Escalate to High Priority if frustration exceeds</span>
-                      <span className="font-bold text-[#1E40AF]">60%</span>
+                      <span className="font-bold text-[#31624e]">60%</span>
                     </div>
                   </div>
                 </div>
@@ -2011,7 +1955,7 @@ export default function Dashboard() {
               <button
                 type="button"
                 onClick={() => showToast('Console configurations saved successfully.', 'success')}
-                className="rounded-lg bg-[#1E40AF] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#16327e] shadow-xs cursor-pointer"
+                className="rounded-lg bg-[#31624e] px-6 py-2.5 text-xs font-bold text-white hover:bg-[#244d3d] shadow-xs cursor-pointer"
               >
                 Save Settings
               </button>
@@ -2033,7 +1977,7 @@ export default function Dashboard() {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-lg font-extrabold text-[#1E40AF]">
+                    <span className="font-mono text-lg font-extrabold text-[#31624e]">
                       {inspectingComplaint.grievance_id || `#${inspectingComplaint.id.substring(0, 8)}`}
                     </span>
                     <button
@@ -2133,7 +2077,7 @@ export default function Dashboard() {
                         value={inspectingComplaint.department || ''}
                         onChange={(e) => handleUpdateDepartment(inspectingComplaint.id, e.target.value)}
                         disabled={updatingId === inspectingComplaint.id}
-                        className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-[#1E40AF] outline-none cursor-pointer"
+                        className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-[#31624e] outline-none cursor-pointer"
                         aria-label="Reassign department"
                       >
                         {DEPARTMENT_OPTIONS.map((deptOpt) => (
@@ -2150,7 +2094,7 @@ export default function Dashboard() {
                         <span className={`rounded-md border px-2.5 py-0.5 ${getCategoryBadgeClass(inspectingComplaint.category)}`}>
                           {inspectingComplaint.category}
                         </span>
-                        <span className="text-[#1E40AF] font-mono">
+                        <span className="text-[#31624e] font-mono">
                           {getFrustrationPercentage(inspectingComplaint.sentiment_score)}% Urgency
                         </span>
                       </div>
@@ -2276,7 +2220,7 @@ export default function Dashboard() {
                   <div className="space-y-3 pt-4 border-t border-slate-200">
                     <div>
                       <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-                        <Sparkles size={14} className="text-[#1E40AF]" /> Related / Similar Grievances
+                        <Sparkles size={14} className="text-[#31624e]" /> Related / Similar Grievances
                       </h4>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         AI detected complaints that may be related to this grievance.
@@ -2300,7 +2244,7 @@ export default function Dashboard() {
                                   <button
                                     type="button"
                                     onClick={() => handleInspectRelatedGrievance(relId)}
-                                    className="font-mono text-xs font-extrabold text-[#1E40AF] hover:underline flex items-center gap-1 cursor-pointer"
+                                    className="font-mono text-xs font-extrabold text-[#31624e] hover:underline flex items-center gap-1 cursor-pointer"
                                     title="Click to inspect this related grievance"
                                   >
                                     <Eye size={12} />
@@ -2369,7 +2313,7 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
                       <span className="text-xs font-extrabold uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-                        <History size={14} className="text-[#1E40AF]" /> Status History Timeline
+                        <History size={14} className="text-[#31624e]" /> Status History Timeline
                       </span>
                     </div>
 
@@ -2382,7 +2326,7 @@ export default function Dashboard() {
                       ) : inspectingHistory.length > 0 ? (
                         inspectingHistory.map((hist, index) => (
                           <div key={index} className="relative pl-5 border-l-2 border-blue-400 pb-3 text-xs space-y-1">
-                            <div className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#1E40AF]" />
+                            <div className="absolute -left-[5px] top-1.5 h-2 w-2 rounded-full bg-[#31624e]" />
                             <div className="flex items-center justify-between text-[10px] text-slate-500 font-medium">
                               <span>{new Date(hist.changed_at).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
                               <span className="font-bold text-slate-700">{hist.changed_by || 'Officer'}</span>
@@ -2418,7 +2362,7 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => handleDirectStatusUpdate(inspectingComplaint.id, 'ASSIGNED')}
                     disabled={updatingId === inspectingComplaint.id}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#1E40AF] px-4 py-2 text-xs font-bold text-white hover:bg-[#16327e] disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-lg bg-[#31624e] px-4 py-2 text-xs font-bold text-white hover:bg-[#244d3d] disabled:opacity-50 cursor-pointer"
                   >
                     <Play size={13} /> Assign to Department
                   </button>
@@ -2429,7 +2373,7 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => handleDirectStatusUpdate(inspectingComplaint.id, 'IN_PROGRESS')}
                     disabled={updatingId === inspectingComplaint.id}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#1E40AF] px-4 py-2 text-xs font-bold text-white hover:bg-[#16327e] disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-lg bg-[#31624e] px-4 py-2 text-xs font-bold text-white hover:bg-[#244d3d] disabled:opacity-50 cursor-pointer"
                   >
                     <Play size={13} /> Start Work
                   </button>
@@ -2473,7 +2417,7 @@ export default function Dashboard() {
                     type="button"
                     onClick={() => handleDirectStatusUpdate(inspectingComplaint.id, 'IN_PROGRESS')}
                     disabled={updatingId === inspectingComplaint.id}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#1E40AF] px-4 py-2 text-xs font-bold text-white hover:bg-[#16327e] disabled:opacity-50 cursor-pointer"
+                    className="flex items-center gap-1.5 rounded-lg bg-[#31624e] px-4 py-2 text-xs font-bold text-white hover:bg-[#244d3d] disabled:opacity-50 cursor-pointer"
                   >
                     <Play size={13} /> Resume Work
                   </button>
@@ -2539,7 +2483,7 @@ export default function Dashboard() {
                         : 'State reason for reopening...'
                     }
                     rows={3}
-                    className="w-full rounded-lg border border-slate-300 p-3 text-xs outline-none focus:border-[#1E40AF]"
+                    className="w-full rounded-lg border border-slate-300 p-3 text-xs outline-none focus:border-[#31624e]"
                   />
                 </div>
               )}
@@ -2626,7 +2570,7 @@ export default function Dashboard() {
 
         {/* TOAST NOTIFICATION BANNER */}
         {toast.show && (
-          <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border border-slate-800 bg-[#0f172a] px-4 py-3 text-xs font-bold text-white shadow-2xl">
+          <div className="fixed bottom-5 right-5 z-50 flex items-center gap-3 rounded-xl border border-slate-800 bg-[#202522] px-4 py-3 text-xs font-bold text-white shadow-2xl">
             {toast.type === 'success' ? (
               <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
             ) : (
@@ -2642,7 +2586,7 @@ export default function Dashboard() {
             </button>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }

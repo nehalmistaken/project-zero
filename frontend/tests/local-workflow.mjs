@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+const data=new Map();globalThis.localStorage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+const {localApi}=await import('../src/services/localApi.js');
+assert.equal((await localApi.getComplaints()).total,0);
+assert.equal((await localApi.predict('An exposed electricity wire is dangerous')).data.category,'Electricity');
+const a=await localApi.submitComplaint({complaint_text:'TITLE: Water pipe leak\nDESCRIPTION:\nA water pipe has been leaking for three days.',category:'Water'});
+const b=await localApi.submitComplaint({complaint_text:'Road potholes near the park',category:'Road'});
+assert.notEqual(a.complaint.grievance_id,b.complaint.grievance_id);
+assert.equal((await localApi.getComplaints({category:'Water'})).total,1);
+assert.equal((await localApi.getComplaints({search:'potholes'})).total,1);
+assert.equal((await localApi.getComplaints({page:2,limit:1})).complaints[0].id,a.complaint.id);
+assert.equal((await localApi.getComplaintByGrievanceId(a.complaint.grievance_id.toLowerCase())).history[0].new_status,'SUBMITTED');
+await assert.rejects(()=>localApi.getComplaintByGrievanceId('missing'));
+data.set('project.local.grievances.v1','invalid');await assert.rejects(()=>localApi.getComplaints());
+console.log('9 local workflow checks passed. No browser records changed.');
