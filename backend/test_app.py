@@ -3,6 +3,7 @@ import sqlite3
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 
 sys.path.insert(0, os.path.dirname(__file__))
 
@@ -22,7 +23,7 @@ class AppRouteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.get_json()
         self.assertEqual(payload['status'], 'ok')
-        self.assertIn('GrievanceAI', payload['message'])
+        self.assertIn('PROJECT ZERO', payload['message'])
 
 
 class WorkflowTests(unittest.TestCase):
@@ -275,7 +276,8 @@ class WorkflowTests(unittest.TestCase):
 
     def test_reopening_restarts_active_sla_and_preserves_resolution_history(self):
         complaint_id = self.db.insert_complaint(
-            'Reopen SLA test', 'Others', 'High', 0, created_at='2026-09-06T14:00:00Z'
+            'Reopen SLA test', 'Others', 'High', 0,
+            created_at=(datetime.now(timezone.utc)-timedelta(hours=1)).isoformat()
         )['id']
         self.assertEqual(self.update(complaint_id, 'ASSIGNED').status_code, 200)
         self.assertEqual(self.update(complaint_id, 'IN_PROGRESS').status_code, 200)
@@ -443,3 +445,4 @@ class WorkflowTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+

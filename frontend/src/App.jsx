@@ -1,7 +1,9 @@
 import React, { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
+import ServiceClock from './components/ServiceClock';
 import Navbar from './components/Navbar';
 import {officerSession} from './services/officerAccounts';
+const AnalysisDesk=lazy(()=>import('./pages/AnalysisDesk'));
 const OfficerRequests=lazy(()=>import('./pages/OfficerRequests'));
 const OfficerAccount=lazy(()=>import('./pages/OfficerAccount'));
 const OfficerWorkspace=lazy(()=>import('./pages/OfficerWorkspace'));
@@ -17,10 +19,10 @@ function Workspace() {
   const location = useLocation();
   const signedIn = officerSession() || localStorage.getItem('admin_token') || sessionStorage.getItem('project_guest');
   if (!signedIn) return <Navigate to="/login" replace state={{from:location.pathname+location.search}}/>;
-  return <div className="cf-app"><Navbar/><main id="content" tabIndex="-1" className="cf-content">{sessionStorage.getItem('project_mode') === 'local' && <div className="project-local-note"><span className="project-dot"/>Local workspace <span>Saved in this browser · Not sent to a public authority</span></div>}<Outlet/></main></div>;
+  return <div className="cf-app"><Navbar/><main id="content" tabIndex="-1" className="cf-content">{sessionStorage.getItem('project_mode') === 'local' && <div className="project-local-note"><span className="project-dot"/>Local workspace <span>Saved in this browser · Not sent to a public authority</span></div>}{!['/activity','/timeline'].includes(location.pathname)&&<div className="zero-workspace-clock"><ServiceClock/></div>}<Outlet/></main></div>;
 }
 export default function App(){return <BrowserRouter><ScrollToTop/><Suspense fallback={<div className="project-loading" role="status">Opening workspace…</div>}><Routes>
 <Route path="/" element={<Navigate to="/login" replace/>}/><Route path="/officer/account" element={<OfficerAccount/>}/><Route path="/account" element={<CitizenAccount/>}/><Route path="/login" element={<Login/>}/><Route path="/admin/login" element={<Navigate to="/login" replace/>}/>
-<Route element={<Workspace/>}><Route path="/officer/requests" element={<OfficerRequests/>}/><Route path="/officer/workspace" element={<OfficerWorkspace/>}/><Route path="/timeline" element={<ActivityBoard timeline/>}/><Route path="/activity" element={<ActivityBoard/>}/><Route path="/submit" element={<SubmitComplaint/>}/><Route path="/history" element={<History/>}/><Route path="/admin/dashboard" element={<Dashboard/>}/><Route path="/technology" element={<Technology/>}/></Route>
+<Route element={<Workspace/>}><Route path="/officer/analysis" element={<AnalysisDesk/>}/><Route path="/officer/requests" element={<OfficerRequests/>}/><Route path="/officer/workspace" element={<OfficerWorkspace/>}/><Route path="/timeline" element={<ActivityBoard timeline/>}/><Route path="/activity" element={<ActivityBoard/>}/><Route path="/submit" element={<SubmitComplaint/>}/><Route path="/history" element={<History/>}/><Route path="/admin/dashboard" element={<Dashboard/>}/><Route path="/technology" element={<Technology/>}/></Route>
 <Route path="*" element={<Navigate to="/login" replace/>}/></Routes></Suspense></BrowserRouter>}
 

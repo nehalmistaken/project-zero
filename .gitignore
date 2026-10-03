@@ -59,3 +59,7 @@ backend/*.db
 .env.production.local
 backend/.env
 frontend/.env
+
+# Downloaded pretrained model cache (reproducible pinned download)
+models/
+

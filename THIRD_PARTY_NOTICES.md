@@ -19,4 +19,12 @@
 - Synthetic Hindi, Hinglish and English training examples with CPGRAMS-style categories, not official government grievance records.
 - Reproduction and category mapping: ml_model/train_browser_model.py.
 - Browser model and report: frontend/src/ml/complaint-model.json and ml_model/browser-evaluation.json.
-- MuRIL pretrained model was researched but not bundled or executed. The shipped model is locally trained Multinomial Naive Bayes.
+- MuRIL was researched but not bundled. This locally trained Multinomial Naive Bayes model is now the offline fallback; the default full workspace uses MiniLM described below.
+
+## Pretrained semantic model
+- Model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2, by Sentence Transformers.
+- Base model: https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 (Apache-2.0).
+- ONNX conversion: Xenova/paraphrase-multilingual-MiniLM-L12-v2, revision 2c4055b12046f11709e9df2c122e59ffbdc2f900.
+- Runtime: @huggingface/transformers 3.8.1 with ONNX Runtime.
+- Weights are unmodified downloaded quantized ONNX files. Project-specific routing uses analysis/prototypes.json and explicit triage rules; no pretrained weight fine-tuning is claimed.
+- License text: analysis/MODEL-LICENSE.txt. Download checksums: analysis/model-lock.json.

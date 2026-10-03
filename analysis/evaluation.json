@@ -1,0 +1,105 @@
+{
+  "kind": "Hand-authored regression set, not an independent accuracy benchmark",
+  "model": "Xenova/paraphrase-multilingual-MiniLM-L12-v2",
+  "total": 12,
+  "correct": 10,
+  "baselineCorrect": 8,
+  "rows": [
+    {
+      "text": "The taps in our apartment have run dry since yesterday.",
+      "expected": "Water",
+      "actual": "Others",
+      "baseline": "Water",
+      "review": true,
+      "similarity": 0.5164953482786948
+    },
+    {
+      "text": "There is a crater in the carriageway that damages passing tyres.",
+      "expected": "Road",
+      "actual": "Road",
+      "baseline": "Water",
+      "review": false,
+      "similarity": 0.6286310496224669
+    },
+    {
+      "text": "Every evening the lamps along our lane stay dark.",
+      "expected": "Electricity",
+      "actual": "Electricity",
+      "baseline": "Electricity",
+      "review": true,
+      "similarity": 0.6843869118615067
+    },
+    {
+      "text": "Refuse bags have accumulated because the collection truck never comes.",
+      "expected": "Garbage",
+      "actual": "Garbage",
+      "baseline": "Garbage",
+      "review": true,
+      "similarity": 0.47643428222929535
+    },
+    {
+      "text": "Please repaint the faded seating in our public garden.",
+      "expected": "Others",
+      "actual": "Others",
+      "baseline": "Road",
+      "review": false,
+      "similarity": 0.5784183139995431
+    },
+    {
+      "text": "हमारे घरों में पीने का पानी नहीं आ रहा है।",
+      "expected": "Water",
+      "actual": "Water",
+      "baseline": "Water",
+      "review": true,
+      "similarity": 0.7729799112274939
+    },
+    {
+      "text": "सड़क पर गड्ढे होने से वाहन दुर्घटना हो रही है।",
+      "expected": "Road",
+      "actual": "Road",
+      "baseline": "Road",
+      "review": false,
+      "similarity": 0.788668359158771
+    },
+    {
+      "text": "कूड़ा कई दिनों से सड़क पर पड़ा है।",
+      "expected": "Garbage",
+      "actual": "Road",
+      "baseline": "Electricity",
+      "review": true,
+      "similarity": 0.6321250581459407
+    },
+    {
+      "text": "हमारे मोहल्ले में बिजली की आपूर्ति बंद है।",
+      "expected": "Electricity",
+      "actual": "Electricity",
+      "baseline": "Electricity",
+      "review": false,
+      "similarity": 0.7739988190828295
+    },
+    {
+      "text": "The loudspeaker at the venue keeps everyone awake at night.",
+      "expected": "Others",
+      "actual": "Others",
+      "baseline": "Road",
+      "review": true,
+      "similarity": 0.5219736812063017
+    },
+    {
+      "text": "A water main burst and the drinking supply has stopped.",
+      "expected": "Water",
+      "actual": "Water",
+      "baseline": "Water",
+      "review": false,
+      "similarity": 0.7327179677837758
+    },
+    {
+      "text": "A live wire is hanging over the pavement.",
+      "expected": "Electricity",
+      "actual": "Electricity",
+      "baseline": "Electricity",
+      "review": false,
+      "similarity": 0.8106295583247273
+    }
+  ]
+}

@@ -9,7 +9,7 @@ load_dotenv()
 # Import local modules
 import jwt
 from database import GrievanceDB
-from classifier import ComplaintClassifier
+from integrated_classifier import ComplaintClassifier
 from auth import encode_auth_token, encode_citizen_token, token_required, SECRET_KEY
 from departments import get_department_for_category, DEPARTMENTS
 from similarity import find_related_complaints
@@ -31,7 +31,7 @@ def root():
     """Simple root endpoint for the backend service."""
     return jsonify({
         "status": "ok",
-        "message": "GrievanceAI backend is running. Use /health or /api/* endpoints.",
+        "message": "PROJECT ZERO backend is running. Use /health or /api/* endpoints.",
         "routes": ["/health", "/api/auth/login", "/api/predict", "/api/submit-complaint", "/api/get-complaints", "/api/get-complaints/by-grievance-id/<grievance_id>"]
     }), 200
 
@@ -134,6 +134,10 @@ def submit_complaint():
         category = category or analysis["category"]
         priority = priority or analysis["priority"]
         sentiment_score = sentiment_score if sentiment_score is not None else analysis["sentiment_score"]
+    # The legacy database requires a numeric sentiment field. The semantic model
+    # does not measure sentiment; zero is a compatibility placeholder, not a score.
+    if sentiment_score is None:
+        sentiment_score = 0
 
     department = get_department_for_category(category)
     if department not in DEPARTMENTS:
@@ -494,4 +498,5 @@ if __name__ == '__main__':
     debug_mode = os.getenv("FLASK_ENV") == "development"
     
     print(f"Starting server on port {port}...")
-    app.run(host="0.0.0.0", port=port, debug=debug_mode)
+    app.run(host=os.getenv("HOST", "127.0.0.1"), port=port, debug=debug_mode)
+

@@ -241,8 +241,8 @@ export default function Navbar() {
     <>
       <a href="#content" className="cf-skip">Skip to workspace</a>
       <aside className="cf-sidebar">
-        <Link to="/submit" className="cf-brand"><img src="/india-emblem.svg" alt="Emblem of India" className="zero-india-emblem"/><div>PROJECT ZERO<small className="zero-brand-quote">Every voice. A better tomorrow.</small></div></Link>
-        <Link to="/timeline" className="cf-workspace"><Clock size={21}/><div>Case timeline<small>Follow each response →</small></div></Link>
+        <Link to="/submit" className="cf-brand"><img src="/india-emblem.svg" alt="Emblem of India" className="zero-india-emblem"/><div><span>PROJECT</span><span>ZERO</span></div></Link>
+        {localOfficer||adminToken ? <Link to="/officer/analysis" className="cf-workspace"><ShieldAlert size={21}/><div>Analysis desk<small>Evidence, risk & routing →</small></div></Link> : <Link to="/timeline" className="cf-workspace"><Clock size={21}/><div>Case timeline<small>Follow each response →</small></div></Link>}
         <p className="cf-nav-label">{(adminToken||localOfficer) ? 'OPERATIONS' : 'CITIZEN SERVICES'}</p>
         <nav aria-label="Main navigation" className="cf-nav">
           {links.map(([path,label,Icon]) => <Link key={path} to={path} className={isActive(path) ? 'active' : ''} aria-current={isActive(path) ? 'page' : undefined}><Icon size={18} strokeWidth={1.6}/>{label}</Link>)}

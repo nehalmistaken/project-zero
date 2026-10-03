@@ -2,7 +2,7 @@ export function grievanceText(input){const description=input.split(/DESCRIPTION:
 export function triage(text){
  const affirmative=text.replace(/\b(?:no|without|not any)\s+(?:immediate\s+)?(?:fire|danger|injuries|injury|flooding|risk)\b/g,' ');
  const signals=[];
- const hazard=/\b(electrocut\w*|live wire\w*|exposed (?:electric\w* )?wire\w*|sparking|fire|gas leak|injur\w*|collapsed|collapse|sewage.*drinking|contaminated.*water|water.*contaminated|flooding|dangerous)\b|खुली तार|खुले तार|करंट|आग लगी|बाढ़|घायल|जान का खतरा/.test(affirmative);
+ const hazard=/\b(electrocut\w*|live wire\w*|exposed (?:electric\w* )?wire\w*|sparking|fatal|died|death|dead person|fire|gas leak|injur\w*|collapsed|collapse|sewage.*drinking|contaminated.*water|water.*contaminated|flooding|dangerous)\b|खुली तार|खुले तार|करंट|आग लगी|बाढ़|घायल|जान का खतरा|मृत्यु|मौत/.test(affirmative);
  const roadRisk=/pothole|pot hole|गड्ढ|gaddh/.test(text)&&/highway|national highway|accident|deep|large|big|school|hospital|बड़ा/.test(text);
  const mainLeak=/(main|major|burst|broken|damage|damaged).*(water pipe|pipeline|water line)|(?:main|burst).*pipe|pipeline.*(?:burst|damage)|पाइप.*फट/.test(text);
  const outage=/no water|no power|no electricity|power cut|outage|supply.*(?:stopped|cut|off)|पानी.*बंद|बिजली.*बंद|nahi aa|band hai/.test(text);

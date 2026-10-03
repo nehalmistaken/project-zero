@@ -1,7 +1,19 @@
 import re
 
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import math
+from collections import Counter
+
+def text_similarities(documents):
+    """Small standard-library TF-IDF index; avoids native ML runtime for routing."""
+    stop = set('a an the is are was were of for to in on at and or with this that it has have been be from by there here no not last first one two three very another some any all these those its as but than then which who where when'.split())
+    bags = [Counter(w for w in re.findall(r'\b\w\w+\b', d.casefold()) if w not in stop) for d in documents]
+    frequency = Counter(w for bag in bags for w in bag)
+    vectors = []
+    for bag in bags:
+        vector = {w: count * (math.log((1+len(bags))/(1+frequency[w]))+1) for w,count in bag.items()}
+        norm = math.sqrt(sum(v*v for v in vector.values())) or 1
+        vectors.append({w:v/norm for w,v in vector.items()})
+    return [sum(v*vector.get(w,0) for w,v in vectors[0].items()) for vector in vectors[1:]]
 
 ACTIVE_STATUSES = {"SUBMITTED", "ASSIGNED", "IN_PROGRESS", "REOPENED"}
 RELATED_THRESHOLD = 0.50
@@ -50,9 +62,7 @@ def find_related_complaints(text, category, department, candidates):
     ][:MAX_COMPARISONS]
     if not active_candidates:
         return results
-    vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1, 1))
-    vectors = vectorizer.fit_transform([text] + [candidate["complaint_text"] for candidate in active_candidates])
-    text_scores = cosine_similarity(vectors[0:1], vectors[1:]).ravel()
+    text_scores = text_similarities([text] + [candidate["complaint_text"] for candidate in active_candidates])
     for candidate, text_similarity in zip(active_candidates, text_scores):
         score, reason = _score_metadata(float(text_similarity), text, candidate, category, department)
         if score >= RELATED_THRESHOLD:
