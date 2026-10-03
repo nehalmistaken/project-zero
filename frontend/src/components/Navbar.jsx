@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   ScanLine,
   BarChart3,
-  Monitor,
+
   Plus,
   Building2,
   FileText,
@@ -13,9 +13,9 @@ import {
   LogOut,
   Bell,
   CheckCheck,
+  CheckCircle2,
   AlertCircle,
   AlertTriangle,
-  CheckCircle2,
   Info,
   Clock,
   Flame,
@@ -23,6 +23,8 @@ import {
   Copy,
   RefreshCw,
 } from 'lucide-react';
+import GovernmentMark from './GovernmentMark';
+import {officerSession} from '../services/officerAccounts';
 import { citizenProfile } from '../services/citizenAccounts';
 import { apiService } from '../services/api';
 
@@ -30,6 +32,8 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const profile = citizenProfile();
+  const localOfficer=officerSession();
+  const [requestSearch,setRequestSearch]=useState('');
   const adminToken = localStorage.getItem('admin_token');
   const citizenToken = localStorage.getItem('citizen_token');
   const activeToken = adminToken || citizenToken;
@@ -44,6 +48,7 @@ export default function Navbar() {
   const [markingAllRead, setMarkingAllRead] = useState(false);
 
   const handleLogout = () => {
+    sessionStorage.removeItem('project_officer');
     localStorage.removeItem('admin_token');
     localStorage.removeItem('admin_user');
     setNotifications([]);
@@ -162,8 +167,8 @@ export default function Navbar() {
     ['/admin/dashboard?tab=users', 'Officer accounts', CircleUserRound],
     ['/admin/dashboard?tab=settings', 'Settings', ShieldAlert],
   ];
-  const citizenLinks = [['/activity', 'Service activity', BarChart3], ['/activity?filter=high', 'High priority', Flame], ['/activity?filter=pending', 'Pending cases', Clock], ['/activity?filter=resolved', 'Resolved cases', CheckCircle2], ['/submit', 'New grievance', FileText], ['/history', 'Track & browse', SearchCheck]];
-  const links = adminToken ? officerLinks : citizenLinks;
+  const citizenLinks = [['/activity', 'Service activity', BarChart3], ['/submit', 'New grievance', FileText], ['/history', 'Track & browse', SearchCheck]];
+  const links = localOfficer ? [['/officer/workspace','Operations workspace',LayoutDashboard],...(localOfficer.role==='admin'?[['/officer/requests','Officer access',CircleUserRound]]:[])] : adminToken ? officerLinks : citizenLinks;
   useEffect(() => { setShowDropdown(false); }, [location.pathname, location.search]);
   useEffect(() => {
     const closeOnEscape = event => { if (event.key === 'Escape') setShowDropdown(false); };
@@ -236,14 +241,14 @@ export default function Navbar() {
     <>
       <a href="#content" className="cf-skip">Skip to workspace</a>
       <aside className="cf-sidebar">
-        <Link to="/submit" className="cf-brand"><img src="/india-emblem.svg" alt="Emblem of India" className="zero-india-emblem"/><div>PROJECT ZERO<small>Independent civic demo</small></div></Link>
-        <Link to="/activity?filter=all" className="cf-workspace"><BarChart3 size={21}/><div>Service activity<small>Explore the live demo →</small></div></Link>
-        <p className="cf-nav-label">{adminToken ? 'OPERATIONS' : 'CITIZEN SERVICES'}</p>
+        <Link to="/submit" className="cf-brand"><img src="/india-emblem.svg" alt="Emblem of India" className="zero-india-emblem"/><div>PROJECT ZERO<small className="zero-brand-quote">Every voice. A better tomorrow.</small></div></Link>
+        <Link to="/timeline" className="cf-workspace"><Clock size={21}/><div>Case timeline<small>Follow each response →</small></div></Link>
+        <p className="cf-nav-label">{(adminToken||localOfficer) ? 'OPERATIONS' : 'CITIZEN SERVICES'}</p>
         <nav aria-label="Main navigation" className="cf-nav">
           {links.map(([path,label,Icon]) => <Link key={path} to={path} className={isActive(path) ? 'active' : ''} aria-current={isActive(path) ? 'page' : undefined}><Icon size={18} strokeWidth={1.6}/>{label}</Link>)}
         </nav>
-        <div className="cf-sidebar-bottom">
-          <div className="cf-local-note"><Monitor size={18}/><div>Public service desk<small>Grievance intake, routing<br/>and resolution tracking</small></div></div>
+        <form className="zero-sidebar-search" onSubmit={e=>{e.preventDefault();navigate(localOfficer?'/officer/workspace?search='+encodeURIComponent(requestSearch):'/history?id='+encodeURIComponent(requestSearch));}}><label htmlFor="sidebar-request-search">Find a request</label><div><input id="sidebar-request-search" value={requestSearch} onChange={e=>setRequestSearch(e.target.value)} placeholder={localOfficer?'Reference or keywords':'Tracking reference'} required/><button aria-label="Search requests"><SearchCheck size={18}/></button></div></form><div className="zero-sidebar-guide"><span>YOUR SERVICE DESK</span><p>{localOfficer?'Review each concern. Explain every decision. Keep citizens informed.':'Describe your concern, save your reference, and follow each response.'}</p></div><div className="cf-sidebar-bottom">
+          <GovernmentMark/>
           <Link to="/technology" className="cf-project-link"><Info size={18}/>About Project</Link>
           {adminToken && <Link to="/submit" className="cf-project-link"><Plus size={18}/>Register a grievance</Link>}
           <div className="zero-sidebar-actions">          {activeToken && (
@@ -374,7 +379,7 @@ export default function Navbar() {
           )}
 
 
-<button type="button" className="zero-sidebar-exit" onClick={handleLogout}><LogOut size={17}/>{adminToken?'Sign out':'Exit workspace'}</button></div><div className="cf-profile"><span className="cf-avatar">{adminToken ? 'AD' : 'CT'}</span><div>{adminToken ? 'Administrator' : profile?.name || 'Guest workspace'}<small>{adminToken ? 'Officer access' : 'Report & track'}</small></div></div>
+<button type="button" className="zero-sidebar-exit" onClick={handleLogout}><LogOut size={17}/>{adminToken||localOfficer?'Sign out':'Exit workspace'}</button></div><div className="cf-profile"><span className="cf-avatar">{adminToken||localOfficer ? 'AD' : 'CT'}</span><div>{localOfficer?.name || (adminToken ? 'Administrator' : profile?.name || 'Guest workspace')}<small>{adminToken||localOfficer ? 'Officer access' : 'Report & track'}</small></div></div>
         </div>
       </aside>
 

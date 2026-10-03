@@ -203,7 +203,7 @@ export default function SubmitComplaint() {
     setError('');
 
     try {
-      const [response] = await Promise.all([apiService.predict(complaintText), new Promise(resolve=>setTimeout(resolve,850))]);
+      const [response] = await Promise.all([apiService.predict(title+'\n'+complaintText), new Promise(resolve=>setTimeout(resolve,1500))]);
       if (response.status === 'success') {
         setPrediction(response.data);
         if (response.data.category) {
@@ -248,7 +248,7 @@ export default function SubmitComplaint() {
     }
 
     try {
-      const response = await apiService.submitComplaint(payload);
+      const [response] = await Promise.all([apiService.submitComplaint(payload),new Promise(resolve=>setTimeout(resolve,550))]);
       if (response.status === 'success') {
         setSuccess(response.complaint);
         setCelebrate(true);
@@ -525,7 +525,7 @@ export default function SubmitComplaint() {
                   type="text"
                   value={title}
                   onChange={(e) => {
-                    setTitle(e.target.value);
+                    setTitle(e.target.value); setPrediction(null);
                     clearFieldError('title');
                   }}
                   placeholder="Summarize the issue (e.g. Severe water pipe leakage in Ward 4)"
@@ -559,7 +559,7 @@ export default function SubmitComplaint() {
                 rows={5}
                 value={complaintText}
                 onChange={(e) => {
-                  setComplaintText(e.target.value);
+                  setComplaintText(e.target.value); setPrediction(null);
                   clearFieldError('complaintText');
                 }}
                 placeholder="Explain the grievance clearly. Include details such as duration of issue, safety impacts, or specific landmarks..."
@@ -767,7 +767,7 @@ export default function SubmitComplaint() {
             type="button"
             onClick={handleAnalyze}
             disabled={analyzing || submitting}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50/70 px-5 py-2.5 text-xs font-bold text-[#31624e] hover:bg-blue-100 hover:border-blue-300 disabled:opacity-50 transition-all cursor-pointer"
+            className={`zero-ai-trigger ${analyzing?'working':''} w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50/70 px-5 py-2.5 text-xs font-bold text-[#31624e] hover:bg-blue-100 hover:border-blue-300 disabled:opacity-50 transition-all cursor-pointer`}
           >
             {analyzing ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
             <span>{analyzing ? 'Analyzing Text...' : (isLocal ? 'Analyze with AI' : 'Analyze with AI')}</span>

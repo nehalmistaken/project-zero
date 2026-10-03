@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node tests/local-workflow.mjs && node tests/zero-features.mjs && node tests/realism-features.mjs",
+    "test": "node tests/local-workflow.mjs && node tests/zero-features.mjs && node tests/realism-features.mjs && node tests/officer-workflow.mjs && node tests/triage.mjs",
     "start": "vite --host 127.0.0.1"
   },
   "dependencies": {

@@ -11,7 +11,7 @@ function owner(){try{return JSON.parse(sessionStorage.getItem('project_profile')
 function read(){return readAll().filter(row=>(row.owner_id||'guest')===owner());}
 function save(rows) { try { localStorage.setItem(KEY, JSON.stringify(rows)); } catch { throw new Error('This browser could not save the grievance. Allow browser storage or use the connected API.'); } }
 const classify = analyzeComplaint;
-function history(record) { return [{ new_status: 'SUBMITTED', changed_at: record.timestamp, changed_by: 'Local guest', remark: 'Saved on this device. Awaiting connection to a service authority.' }]; }
+function history(record) { return record.history || [{ new_status: 'SUBMITTED', changed_at: record.timestamp, changed_by: 'Local guest', remark: 'Saved on this device. Awaiting connection to a service authority.' }]; }
 export const localApi = {
   async predict(text) { return { status: 'success', data: classify(text) }; },
   async submitComplaint(payload) {

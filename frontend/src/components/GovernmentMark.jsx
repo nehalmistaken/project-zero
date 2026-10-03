@@ -1,0 +1,1 @@
+export default function GovernmentMark(){return <div className="zero-government-mark"><img src="/india-emblem.svg" alt="Emblem of India"/><div>Government of India<small>भारत सरकार · Independent project</small></div></div>;}

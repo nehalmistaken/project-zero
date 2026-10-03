@@ -89,3 +89,19 @@ Indian data: https://www.kaggle.com/datasets/abhisheksingh016/citizen-grievance-
 The analysis popup uses a native modal dialog, keyboard focus handling, an indeterminate progress bar and reduced-motion support. The model loads on demand, not on the login screen.
 
 The Emblem of India and an India Gate photo are bundled locally with source credits in THIRD_PARTY_NOTICES.md and About Project. The visible identity states Independent civic demo; PROJECT ZERO is not a Government of India service.
+
+## Local officer workspace
+
+Select **Local workspace** on the login page, then sign in with username `admin` and password `admin123`. These are development-only credentials for the browser-local project. Connected API login still uses the Flask service and its configuration.
+
+New officers can use **Create an officer account**. Account requests store a salted PBKDF2 hash, and require approval in the administrator workspace before login. Approved officers can review the local grievance queue, approve/assign submitted grievances, move a case through its lifecycle, and change priority with a required explanation. The saved decision appears in citizen tracking history. Only the local administrator can approve officer accounts.
+
+Local data and permissions are browser-based demonstration functionality, not server-enforced authentication. Keep real sensitive data out of this mode. The simulated service feed is separate from saved grievances. **Service activity** contains all priority/status filters; **Case timeline** opens the history view. Feed state is retained for the current browser tab.
+
+## Live activity and triage update
+
+Service activity and the officer queue use randomised sample arrivals, status advances and priority reviews every 3–7 seconds. The received counter includes earlier samples; only the latest 40 sample cases stay in the queue. Saved citizen grievances are never advanced by simulation. Officer access approvals have their own navigation page, and the sidebar search filters the officer queue by reference or keywords.
+
+Case Timeline lists saved grievances newest-first, ahead of simulated records. Its progress indicator reflects recorded workflow stages. Submission confirmation stays for three seconds and fades out; reduced-motion preferences suppress movement. AI analysis uses an animated rainbow border while processing.
+
+Local NLP now combines the trained multilingual Naive Bayes category model with explicit service phrase routing and explainable priority rules for hazards, large highway potholes, major pipe damage, essential-service outages, duration and broader impact. Unclear impact gets provisional Medium priority and a review flag. The original model evaluation numbers apply to the trained model alone, not this combined routing layer. Ten regression scenarios verify specific improvements; these do not establish production accuracy. Existing saved priorities remain unchanged until an officer reviews them.
