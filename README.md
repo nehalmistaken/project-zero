@@ -228,7 +228,7 @@ Run this inside frontend after building. This is a local preview, not a public d
 
 ## 10. Repository structure and documentation
 
-To change the project explanation, edit frontend/src/content/projectGuide.json and run node scripts/sync-project-docs.mjs from the repository root. About Project reads the same content, so the application and repository documentation stay consistent. The repository slug is preserved to keep existing clone URLs working.
+To change the project explanation, edit frontend/src/content/projectGuide.json and run node scripts/sync-project-docs.mjs from the repository root. About Project reads the same content, so the application and repository documentation stay consistent. The repository is named project-zero; use the updated clone URL above.
 
 | Location | Purpose |
 | --- | --- |
