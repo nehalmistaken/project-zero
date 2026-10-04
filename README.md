@@ -48,53 +48,36 @@ Internet is needed for initial package and model downloads. The model then runs 
 
 ## 4. One setup, one command to run everything
 
-Install Node.js 22.12+ with npm and Python 3.11 or 3.12 first. Download and extract the repository ZIP, or clone the repository. Open the root folder in your IDE; it contains package.json, frontend, backend, analysis, scripts, and Start-Project.cmd.
+The Windows launcher performs setup and starts the frontend, Flask backend and model service together. There is no separate model installation step.
 
-### Get the source (skip if you extracted the ZIP)
+### 1. Install only Node.js and Python
+
+Install Node.js 22.12+ with npm and Python 3.11 or 3.12 with pip and venv. On Windows select Add Python to PATH or install the Python launcher. Restart your terminal. A browser is required; any IDE is optional. No GPU, API key, Git LFS, MongoDB or IDE extension is needed.
+
+### 2. Extract the project and double-click Start-Project.cmd
+
+Windows: download the repository ZIP, extract it, and double-click Start-Project.cmd. First launch automatically installs libraries, creates .venv and downloads the pinned model once. Keep internet connected for this initial setup. No configuration file needs editing for the local demonstration.
+
+### 3. Open the project
+
+Visit http://127.0.0.1:5173. Keep the launcher running. Later launches reuse installed dependencies and the model. Ctrl+C stops the services. Local demonstration administrator: admin / admin123. Local workspace stores records in your browser; Connected API stores them in the Flask database.
+
+### Alternative: one command from any IDE terminal
 
 ```sh
-git clone https://github.com/nehalmistaken/project-zero.git
-cd project-zero
+node scripts/launch.mjs
 ```
 
-### Install once from the repository root
+Run from the extracted project root on Windows, macOS or Linux. macOS/Linux can also use sh Start-Project.sh. Windows x64 was verified here; other OS paths are provided but not tested on those systems. Native runtime support and compatible OS/CPU versions are still required.
+
+### Only when updating dependencies or repairing setup
 
 ```sh
 npm ci
 npm run setup
 ```
 
-The first command installs the local model runtime. Setup installs frontend packages, creates .venv, installs backend/requirements-runtime.txt, and downloads the pinned pretrained model. On Windows it looks for Python 3.12, then 3.11 through the py launcher. For a custom Python installation, set PROJECT_ZERO_PYTHON to its full executable path before setup. No PowerShell execution-policy changes are needed.
-
-### Start the complete project
-
-```sh
-npm start
-```
-
-Run this from the root, not frontend. The launcher waits for the model and API to become ready before starting the interface. Open http://127.0.0.1:5173. It uses ports 5001 (analysis), 5000 (Flask), and 5173 (frontend). Stop an existing project server before starting another instance. Ctrl+C stops the services launched by this command.
-
-### Windows shortcut
-
-Double-click Start-Project.cmd at the repository root. It installs missing packages and the model, then starts the same combined launcher. Node/npm and Python must already be installed. If setup fails, the window keeps the error visible.
-
-### Choose where to save records
-
-Local workspace stores records in this browser. Continue as guest or create a citizen account. Local administrator credentials are admin / admin123; new local officers need approval. Connected API uses the running Flask database and its separately configured officer credentials. Both modes can use the same local pretrained model.
-
-### Try the workflow
-
-Save a fictional grievance and retain its reference. Sign in as the local administrator, select it from Operations workspace, and record a decision. Open Analysis desk to inspect model evidence separately. An analysis result does not automatically approve or close a grievance.
-
-### Optional lightweight interface only
-
-```sh
-cd frontend
-npm ci
-npm start
-```
-
-This starts only Vite. If the model service is not running, analysis displays a fallback notice and uses the bundled browser model. Connected API also requires Flask, so use the root launcher for the full experience.
+These are maintenance commands, not extra steps for normal first use. Setup can be rerun after a network failure. Python must include venv and pip; some Linux distributions package these separately.
 
 ## 5. Technology used, explained simply
 
@@ -122,7 +105,7 @@ The full project has three running services: React/Vite on 5173, Flask on 5000, 
 
 A small hand-authored regression set produced 10/12 correct category decisions for the new pipeline versus 8/12 for the previous classifier. This is a development check, not an independent accuracy benchmark. The saved report includes both failures: a dry-tap paraphrase was deferred to general review, and one Hindi rubbish complaint was routed to Road. Do not treat the earlier 81.61% browser-model benchmark as the accuracy of this new pipeline.
 
-The older browser Naive Bayes weights remain as a disclosed offline fallback. The pretrained model is downloaded, not retrained here. Model weights are stored outside Git because the ONNX file exceeds GitHub’s ordinary single-file limit; the repository includes a pinned downloader, checksums, model information and an evaluation script. The full project ZIP supplied in chat includes the downloaded model files.
+The older browser Naive Bayes weights remain as a disclosed offline fallback. The pretrained model is downloaded, not retrained here. Model weights are stored outside Git because the ONNX file exceeds GitHub’s ordinary single-file limit; the repository includes a pinned downloader, checksums, model information and an evaluation script. Model files are excluded from the repository and current source ZIP. Setup downloads them automatically once and verifies their checksums. The model is released under Apache 2.0; its license and attribution are included.
 
 ### Use a real pretrained language model
 
@@ -145,6 +128,8 @@ Analysis desk shows the current saved decision alongside the new suggestion, ref
 - [Original browser-model dataset](https://www.kaggle.com/datasets/abhisheksingh016/citizen-grievance-dataset)
 
 ## 7. Where your data goes
+
+An API lets the parts of this app communicate. The local Flask API on port 5000 handles connected records, login, status updates and dashboard data. The local model API on port 5001 receives concern text and returns classification and risk suggestions. Vite on port 5173 proxies analysis calls. No OpenAI, Gemini or hosted Hugging Face inference API is used: no AI API key or per-request fee is required. Hugging Face is used only for the initial model-file download.
 
 - Local grievances, citizen accounts, and officer accounts stay in this browser on this site address. They are not sent to a public authority. Clearing site data removes them; changing browser, hostname or port can make them appear missing.
 - Local account passwords use PBKDF2-SHA-256 with a random salt. Local profile separation is a convenience for this project; someone controlling the browser can inspect or alter stored data. Server-side authorization is needed for a shared deployment.

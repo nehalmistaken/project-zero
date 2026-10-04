@@ -107,39 +107,30 @@
       "id": "local-setup",
       "title": "4. One setup, one command to run everything",
       "paragraphs": [
-        "Install Node.js 22.12+ with npm and Python 3.11 or 3.12 first. Download and extract the repository ZIP, or clone the repository. Open the root folder in your IDE; it contains package.json, frontend, backend, analysis, scripts, and Start-Project.cmd."
+        "The Windows launcher performs setup and starts the frontend, Flask backend and model service together. There is no separate model installation step."
       ],
       "steps": [
         {
-          "title": "Get the source (skip if you extracted the ZIP)",
-          "code": "git clone https://github.com/nehalmistaken/project-zero.git\ncd project-zero"
+          "title": "1. Install only Node.js and Python",
+          "text": "Install Node.js 22.12+ with npm and Python 3.11 or 3.12 with pip and venv. On Windows select Add Python to PATH or install the Python launcher. Restart your terminal. A browser is required; any IDE is optional. No GPU, API key, Git LFS, MongoDB or IDE extension is needed."
         },
         {
-          "title": "Install once from the repository root",
+          "title": "2. Extract the project and double-click Start-Project.cmd",
+          "text": "Windows: download the repository ZIP, extract it, and double-click Start-Project.cmd. First launch automatically installs libraries, creates .venv and downloads the pinned model once. Keep internet connected for this initial setup. No configuration file needs editing for the local demonstration."
+        },
+        {
+          "title": "3. Open the project",
+          "text": "Visit http://127.0.0.1:5173. Keep the launcher running. Later launches reuse installed dependencies and the model. Ctrl+C stops the services. Local demonstration administrator: admin / admin123. Local workspace stores records in your browser; Connected API stores them in the Flask database."
+        },
+        {
+          "title": "Alternative: one command from any IDE terminal",
+          "code": "node scripts/launch.mjs",
+          "text": "Run from the extracted project root on Windows, macOS or Linux. macOS/Linux can also use sh Start-Project.sh. Windows x64 was verified here; other OS paths are provided but not tested on those systems. Native runtime support and compatible OS/CPU versions are still required."
+        },
+        {
+          "title": "Only when updating dependencies or repairing setup",
           "code": "npm ci\nnpm run setup",
-          "text": "The first command installs the local model runtime. Setup installs frontend packages, creates .venv, installs backend/requirements-runtime.txt, and downloads the pinned pretrained model. On Windows it looks for Python 3.12, then 3.11 through the py launcher. For a custom Python installation, set PROJECT_ZERO_PYTHON to its full executable path before setup. No PowerShell execution-policy changes are needed."
-        },
-        {
-          "title": "Start the complete project",
-          "code": "npm start",
-          "text": "Run this from the root, not frontend. The launcher waits for the model and API to become ready before starting the interface. Open http://127.0.0.1:5173. It uses ports 5001 (analysis), 5000 (Flask), and 5173 (frontend). Stop an existing project server before starting another instance. Ctrl+C stops the services launched by this command."
-        },
-        {
-          "title": "Windows shortcut",
-          "text": "Double-click Start-Project.cmd at the repository root. It installs missing packages and the model, then starts the same combined launcher. Node/npm and Python must already be installed. If setup fails, the window keeps the error visible."
-        },
-        {
-          "title": "Choose where to save records",
-          "text": "Local workspace stores records in this browser. Continue as guest or create a citizen account. Local administrator credentials are admin / admin123; new local officers need approval. Connected API uses the running Flask database and its separately configured officer credentials. Both modes can use the same local pretrained model."
-        },
-        {
-          "title": "Try the workflow",
-          "text": "Save a fictional grievance and retain its reference. Sign in as the local administrator, select it from Operations workspace, and record a decision. Open Analysis desk to inspect model evidence separately. An analysis result does not automatically approve or close a grievance."
-        },
-        {
-          "title": "Optional lightweight interface only",
-          "code": "cd frontend\nnpm ci\nnpm start",
-          "text": "This starts only Vite. If the model service is not running, analysis displays a fallback notice and uses the bundled browser model. Connected API also requires Flask, so use the root launcher for the full experience."
+          "text": "These are maintenance commands, not extra steps for normal first use. Setup can be rerun after a network failure. Python must include venv and pip; some Linux distributions package these separately."
         }
       ]
     },
@@ -257,7 +248,7 @@
       ],
       "paragraphs": [
         "A small hand-authored regression set produced 10/12 correct category decisions for the new pipeline versus 8/12 for the previous classifier. This is a development check, not an independent accuracy benchmark. The saved report includes both failures: a dry-tap paraphrase was deferred to general review, and one Hindi rubbish complaint was routed to Road. Do not treat the earlier 81.61% browser-model benchmark as the accuracy of this new pipeline.",
-        "The older browser Naive Bayes weights remain as a disclosed offline fallback. The pretrained model is downloaded, not retrained here. Model weights are stored outside Git because the ONNX file exceeds GitHub’s ordinary single-file limit; the repository includes a pinned downloader, checksums, model information and an evaluation script. The full project ZIP supplied in chat includes the downloaded model files."
+        "The older browser Naive Bayes weights remain as a disclosed offline fallback. The pretrained model is downloaded, not retrained here. Model weights are stored outside Git because the ONNX file exceeds GitHub’s ordinary single-file limit; the repository includes a pinned downloader, checksums, model information and an evaluation script. Model files are excluded from the repository and current source ZIP. Setup downloads them automatically once and verifies their checksums. The model is released under Apache 2.0; its license and attribution are included."
       ],
       "links": [
         [
@@ -284,6 +275,9 @@
         "The photo field currently saves a filename reference only. It does not upload or preserve the image itself.",
         "Connected mode sends requests to your configured Flask service and stores shared records in its database. Switching modes does not migrate local accounts or complaints. Connected officer accounts and local accounts are separate.",
         "Only title/description text is sent to the local model process. The model service does not save requests or log complaint text. It does not contact remote model hosts during inference. The connected database retains a legacy numeric sentiment field; a zero placeholder means sentiment was not measured by this model."
+      ],
+      "paragraphs": [
+        "An API lets the parts of this app communicate. The local Flask API on port 5000 handles connected records, login, status updates and dashboard data. The local model API on port 5001 receives concern text and returns classification and risk suggestions. Vite on port 5173 proxies analysis calls. No OpenAI, Gemini or hosted Hugging Face inference API is used: no AI API key or per-request fee is required. Hugging Face is used only for the initial model-file download."
       ]
     },
     {

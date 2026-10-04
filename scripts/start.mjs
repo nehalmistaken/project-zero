@@ -2,8 +2,9 @@ import {spawn} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {downloadModel} from './download-model.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));
-const python=process.env.PROJECT_ZERO_PYTHON||path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
+const python=path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
 const children=[];let stopping=false;
 function stop(code=0){if(stopping)return;stopping=true;for(const child of children)child.kill();process.exitCode=code;}
 function launch(command,args,cwd=root){const child=spawn(command,args,{cwd,stdio:'inherit',env:{...process.env,FLASK_ENV:'production',PORT:'5000',HOST:'127.0.0.1',ANALYSIS_PORT:'5001',ANALYSIS_URL:'http://127.0.0.1:5001/analyze'}});children.push(child);child.on('error',e=>{console.error(e.message);stop(1);});child.on('exit',code=>{if(!stopping){console.error('A service stopped; shutting down the workspace.');stop(code||1);}});return child;}
@@ -12,7 +13,7 @@ async function wait(url,expected){for(let i=0;i<90&&!stopping;i++){if(await heal
 process.on('SIGINT',()=>stop());process.on('SIGTERM',()=>stop());
 try{
  if(!fs.existsSync(python))throw Error('Python environment missing. Run npm run setup first.');
- if(!fs.existsSync(path.join(root,'models/multilingual-minilm/onnx/model_quantized.onnx')))throw Error('Model missing. Run npm run model:download.');
+ await downloadModel();
  for(const port of [5000,5001,5173]){try{await fetch(`http://127.0.0.1:${port}`,{signal:AbortSignal.timeout(800)});throw Error(`Port ${port} is already in use. Stop the existing project server before npm start.`);}catch(e){if(e.message.startsWith('Port '))throw e;}}
  launch(process.execPath,['analysis/server.mjs']);await wait('http://127.0.0.1:5001/health',d=>d.state==='ready');
  launch(python,['app.py'],path.join(root,'backend'));await wait('http://127.0.0.1:5000/health',d=>d.status==='healthy');

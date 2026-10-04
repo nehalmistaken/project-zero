@@ -11,10 +11,15 @@ try{
  const python=path.join(root,'.venv',win?'Scripts/python.exe':'bin/python');
  if(!fs.existsSync(python)){
   if(process.env.PROJECT_ZERO_PYTHON)run(process.env.PROJECT_ZERO_PYTHON,['-m','venv','.venv']);
-  else if(win){const probe=spawnSync('py',['-3.12','--version']);run('py',[probe.status===0?'-3.12':'-3.11','-m','venv','.venv']);}
-  else run('python3',['-m','venv','.venv']);
+  else {
+   const candidates=win?[['py',['-3.12']],['py',['-3.11']],['python',[]]]:[['python3.12',[]],['python3.11',[]],['python3',[]]];
+   const found=candidates.find(([command,args])=>spawnSync(command,[...args,'-c','import sys; sys.exit(0 if sys.version_info[:2] in [(3,11),(3,12)] else 1)']).status===0);
+   if(!found)throw Error('Install Python 3.11 or 3.12 with pip and venv, then restart this launcher.');
+   run(found[0],[...found[1],'-m','venv','.venv']);
+  }
  }
  run(python,['-m','pip','install','-r','backend/requirements-runtime.txt']);
  await downloadModel();
+ fs.writeFileSync(path.join(root,'.project-zero-ready'),'Setup completed.\n');
  console.log('Setup complete. Run npm start to launch all three services.');
 }catch(e){console.error(e.message);process.exitCode=1;}

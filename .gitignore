@@ -62,4 +62,6 @@ frontend/.env
 
 # Downloaded pretrained model cache (reproducible pinned download)
 models/
+.project-zero-ready
+model-bundle/
 
